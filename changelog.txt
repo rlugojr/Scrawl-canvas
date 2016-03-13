@@ -11,15 +11,19 @@
 Currently working on ...
 ------------------------------------------------------------------------------------
 - bugtracking following release of v5.0.0
+- web workers experimentation
+- development toolchain ()
 
 Topics that I want|need to look at (in no particular order) ...
 ------------------------------------------------------------------------------------
-- new grid entity
+- new grid entity (multiple frames in a grid)
 - frame backface visibility
 - improving the code base (always)
 - user accessibility issues
 - touch/pointer events on mobile/handheld devices
 - improve save/load operations - to allow realtime updates of a shared canvas over the net
+- convert canvas output to animated gif (https://github.com/deanm/omggif https://github.com/antimatter15/jsgif)
+- convert canvas output to video (https://bgrins.github.io/videoconverter.js/)
 - physics engine - rigid body interactions
 - using scrawl with popular javascript frameworks and web building software
 	- jQuery
@@ -45,6 +49,35 @@ Currently known bugs
 
 CHANGE LOG
 ------------------------------------------------------------------------------------
+February - March 2016
+	- looking at toolchain issues
+		- current development setup not good enough
+		- possible docker alternatives for running dev using nginx locally
+		- looking at:
+			- http://tech.yunojuno.com/using-docker-to-contain-a-node-front-end-build-system
+			- https://github.com/JoTrdl/grunt-dock
+	- updated scrawl.loadExtensions() to use promises
+		- where Promise api is available
+		- use existing (vanilla) code if Promise not available
+		- new/rewritten functions:
+			- simpleloader() - stolen verbatim from https://davidwalsh.name/javascript-loader
+			- promiseInit()
+			- loadExtensions()
+			- loadExtensionsUsingVanilla()
+			- loadExtensionsUsingPromise()
+			- loadExtensionsConcatenator()
+	- investigating webworkers
+		- need to determine where best they could be deployed
+			- they can't access the scrawl library directly
+				- they could request additional data when necessary?
+		- new/updated functions:
+			- webWorkerInit()
+			- loadCoreWebWorkers()
+			- makeWebWorker()
+		- new webworker files in source directory
+		- all at very early stage of planning
+
+
 160214
 	- version 5.0.4 released
 	- inline documentation updated
