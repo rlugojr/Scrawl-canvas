@@ -23,7 +23,7 @@
 /**
 # scrawlCore
 
-## Version 5.0.3 - 2 December 2015
+## Version 5.0.4 - 14 February 2016
 
 Developed by Rik Roots - <rik.roots@gmail.com>, <rik@rikweb.org.uk>
 
@@ -108,10 +108,10 @@ Core creates the following sections in the library:
 Scrawl.js version number
 @property version
 @type {String}
-@default 5.0.3
+@default 5.0.4
 @final
 **/
-	my.version = '5.0.3';
+	my.version = '5.0.4';
 	/**
 Array of array object keys used to define the sections of the Scrawl library
 @property nameslist
@@ -136,13 +136,29 @@ For converting between degrees and radians
 **/
 	my.work.radian = Math.PI / 180;
 	/**
+Flag - WebWorker API is supported by browser
+@property webworker
+@type {Boolean}
+@default false
+@private
+**/
+	my.work.webworker = false;
+	/**
+Object to hold file path data
+@property filepath
+@type {Object}
+@default {}
+@private
+**/
+	my.work.filepath = {};
+	/**
 Flag - Promise API is supported by browser
 @property promise
 @type {Boolean}
-@default null
-@final
+@default false
+@private
 **/
-	my.work.promise = null;
+	my.work.promise = false;
 	/**
 An Object containing OBJECTTYPE:Object pairs which in turn contain default attribute values for each Scrawl object constructor
 @property d
@@ -348,70 +364,98 @@ A __general__ function that resets the Scrawl library to empty arrays and object
 		return my;
 	};
 	/**
+scrawl.init helper function
+
+If browser supports the WebWorker API, sets scrawl.work.webworker to true and [do other stuff]
+@method webWorkerInit
+@return always true
+@private
+**/
+	my.webWorkerInit = function() {
+		if (window.Worker) {
+			my.work.webworker = true;
+			/**
+Object to hold webworkers
+@property webworkerPool
+@type {Object}
+@default {}
+@private
+**/
+			my.work.webworkerPool = {};
+			/**
+Array of webworker names
+@property webworkerPoolNames
+@type {Array}
+@default []
+@private
+**/
+			my.work.webworkerPoolNames = [];
+		}
+		console.log('my.work.webworker:', my.work.webworker);
+		return true;
+	};
+	/**
+scrawl.init helper function
+
+If browser supports the Promise API, sets scrawl.work promise to true and invokes scrawl.simpleLoader; both are set to false by default
+@method promiseInit
+@return always true
+@private
+**/
+	my.simpleLoader = false;
+	my.promiseInit = function() {
+		if (typeof Promise !== "undefined" && Promise.toString().indexOf("[native code]") !== -1) {
+			my.work.promise = true;
+			/**
 A __general__ function for loading img, css and js files
 
 Copied and pasted (a terrible example - don't do this!) from https://davidwalsh.name/javascript-loader
 
 All assets are added to the body tag in the DOM
 
-This function auto-runs when scrawl.core loads
+Uses promises! Will only be available if browser supports Promise API functionality
 @method simpleLoader
 @return Javascript object containing .css(), .js() and .img() load functions
 @private
 **/
-	my.simpleLoader = (function() {
-		function _load(tag) {
-			return function(url) {
-				return new Promise(function(resolve, reject) {
-					var element = document.createElement(tag),
-						parent = 'body',
-						attr = 'src';
-					element.onload = function() {
-						resolve(url);
+			my.simpleLoader = (function() {
+				function _load(tag) {
+					return function(url) {
+						return new Promise(function(resolve, reject) {
+							var element = document.createElement(tag),
+								parent = 'body',
+								attr = 'src';
+							element.onload = function() {
+								resolve(url);
+							};
+							element.onerror = function() {
+								reject(url);
+							};
+							switch (tag) {
+								case 'script':
+									element.type = 'text/javascript';
+									element.async = true;
+									break;
+								case 'link':
+									element.type = 'text/css';
+									element.rel = 'stylesheet';
+									attr = 'href';
+									parent = 'head';
+							}
+							element[attr] = url;
+							document[parent].appendChild(element);
+						});
 					};
-					element.onerror = function() {
-						reject(url);
-					};
-					switch (tag) {
-						case 'script':
-							element.type = 'text/javascript';
-							element.async = true;
-							break;
-						case 'link':
-							element.type = 'text/css';
-							element.rel = 'stylesheet';
-							attr = 'href';
-							parent = 'head';
-					}
-					element[attr] = url;
-					document[parent].appendChild(element);
-				});
-			};
+				}
+				return {
+					css: _load('link'),
+					js: _load('script'),
+					img: _load('img')
+				};
+			})();
 		}
-		return {
-			css: _load('link'),
-			js: _load('script'),
-			img: _load('img')
-		};
-	})();
-	/**
-A __general__ function that checks to see if the Promise API is supported by the browser
-@method checkForPromise
-@return true if Promise is supported natively; false otherwise
-@private
-**/
-	my.checkForPromise = function() {
-		if (my.work.promise !== null) {
-			return my.work.promise;
-		}
-		else {
-			if (typeof Promise !== "undefined" && Promise.toString().indexOf("[native code]") !== -1) {
-				my.work.promise = true;
-				return true;
-			}
-			my.work.promise = false;
-			return false;
-		}
+		console.log('my.work.promise:', my.work.promise);
+		return true;
 	};
 	/**
 A __general__ function that loads supporting extensions and integrates them into the core
@@ -486,8 +530,13 @@ The argument object can include the following attributes:
 @chainable
 **/
 	my.loadExtensions = function(items) {
-		if (my.checkForPromise()) {
-			return my.loadExtensionsUsingPromise(items);
+		console.log('loadExtensions');
+		if (my.work.promise) {
+			my.loadExtensionsUsingPromise(items);
+			if (my.work.webworker) {
+				my.loadCoreWebWorkers();
+			}
+			return my;
 		}
 		else {
 			return my.loadExtensionsUsingVanilla(items);
@@ -504,12 +553,15 @@ loadExtensions helper function
 	my.loadExtensionsUsingVanilla = function(items) {
 		var path, callback, error, mini, tail, loaded, required, startTime, timeout, i, iz, getExtensions, done;
 		items = my.safeObject(items);
+		console.log('loadExtensionsUsingVanilla');
 		path = items.path || '';
 		callback = (my.isa_fn(items.callback)) ? items.callback : function() {};
 		error = (my.isa_fn(items.error)) ? items.error : function() {};
 		mini = my.xtGet(items.minified, true);
 		tail = (mini) ? '-min.js' : '.js';
 		loaded = [];
+		my.work.filepath.path = path;
+		my.work.filepath.tail = tail;
 		startTime = Date.now();
 		timeout = 30000; // allow a maximum of 30 seconds to get all extensions
 		getExtensions = function(ext) {
@@ -559,6 +611,7 @@ loadExtensions helper function - uses the new Promise api, if it is available
 	my.loadExtensionsUsingPromise = function(items) {
 		items = my.safeObject(items);
 		var loader, path, file, alias, callback, error, mini, tail, required, request, i, iz;
+		console.log('loadExtensionsUsingPromise');
 		loader = my.simpleLoader;
 		path = items.path || '';
 		alias = my.work.loadAlias;
@@ -568,11 +621,63 @@ loadExtensions helper function - uses the new Promise api, if it is available
 		tail = (mini) ? '-min.js' : '.js';
 		required = my.loadExtensionsConcatenator(items);
 		request = [];
+		my.work.filepath.path = path;
+		my.work.filepath.tail = tail;
 		for (i = 0, iz = required.length; i < iz; i++) {
 			file = alias[required[i]] || required[i];
 			request.push(loader.js((/\.js$/.test(file)) ? path + file : path + file + tail));
 		}
 		Promise.all(request).then(callback).catch(error);
+		return my;
+	};
+	/**
+If Promise and WebWorker APIs are supported, load additional webworker files
+
+This function is automatically called via loadExtensions() - if that function is not used, then this function can be called directly
+
+To call the function directly, then details of where the web worker files are held need to be supplied in the argument object, specifically:
+
+* __path__ - String path to where the files are held
+* __tail__ - String tail (generally '.js' for source files and '-min.js' for minified versions)
+
+@method loadCoreWebWorkers
+@param {Object} items - JavaScript object containing key:value pairs
+@return The Scrawl library object (scrawl)
+@chainable
+**/
+	my.loadCoreWebWorkers = function(items) {
+		items = my.safeObject(items);
+		var get = my.xtGet,
+		filepath = my.work.filepath,
+		path = get(items.path, filepath.path, false),
+		tail = get(items.tail, filepath.tail, false),
+		file, name;
+		console.log('loadCoreWebWorkers 1; ', tail, path);
+		if (path && tail) {
+			name = 'test1';
+			file = path + 'scrawlCoreWorker1' + tail;
+			my.makeWebWorker(name, file);
+			name = 'test2';
+			file = path + 'scrawlCoreWorker2' + tail;
+			my.makeWebWorker(name, file);
+		}
+		return my;
+	};
+	/**
+Create a web worker and add it to the web worker pool. Both arguments are required.
+
+@method makeWebWorker
+@param {String} name - String name
+@param {String} file - JavaScript file to be used by web worker - including relative or absolute path
+@return Worker object
+**/
+	my.makeWebWorker = function(name, file) {
+		console.log('makeWebWorker 1; ', name, file);
+		if (my.work.promise && my.work.webworker && my.xta(name, file)) {
+			my.work.webworkerPool[name] = new Worker(file);
+			my.pushUnique(my.work.webworkerPoolNames, name);
+		}
+		console.log('makeWebWorker 2; ', my.work.webworkerPool);
 		return my;
 	};
 	/**
@@ -2670,6 +2775,15 @@ Feature detection
 		this.getStacksDeviceData();
 		this.getImagesDeviceData();
 		this.checkTouch();
+
+		setTimeout(function() {
+			my.work.webworkerPool.test2.onmessage = function(e) {
+				console.log('Message received from test2 worker', typeof e, e);
+			};
+			console.log('sending message to test2 worker');
+			my.work.webworkerPool.test2.postMessage('Hi, Rik!');
+		}, 2000);
+
 	};
 	/**
 Check if we should expect to receive touch events
@@ -8654,6 +8768,9 @@ Remove this Animation from the scrawl library
 		my.work.resortAnimations = true;
 		return true;
 	};
+
+	my.promiseInit();
+	my.webWorkerInit();
 
 	var exports = my;
 
