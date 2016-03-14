@@ -71,11 +71,14 @@ To start the server:
 
 Be aware that the server will often take its own sweet time to stir itself into action and display the index page. The page will display on your default browser, but can also be (simultaneously) tested in other browsers by copy-pasting the page address over to them. 
 
-(Lately the server has been getting very, very slow. I'm currently experimenting with Docker containers and nginx to see if I can get things speeded up - see bottom of this page.)
+NOTE: lately the server has been getting very, very slow. I'm currently experimenting with Docker containers and nginx to see if I can get things speeded up - see bottom of this page.
+
+An alternative approach is to navigate to the demos folder and start http-server
+- doesn't refresh pages when code starts - probably not a bad thing
 
 ## New releases
 
-(Typically I'm ignoring my own advice at the moment - I'm not using git flow for creating branches, just plain old git commands. I'm branching and merging lo9cally - occasionally pushing branches to github - and creating tags and releases directly on GitHub.)
+(Typically I'm ignoring my own advice at the moment - I'm not using git flow for creating branches, just plain old git commands. I'm branching and merging locally - occasionally pushing branches to github - and creating tags and releases directly on GitHub.)
 
 Scrawl uses an x.y.z approach to tagging releases, where
 
@@ -85,11 +88,9 @@ Scrawl uses an x.y.z approach to tagging releases, where
 
 Current version (at the time of writing this document) is 5.0.4
 
-Start a release branch via git flow
+> pull develop branch
 
-    $ git flow release start [next.version.tag]
-
-After any final bug fixes have been committed to the release branch, the following operations need to be performed:
+> merge branch back into develop, fixing conflicts
 
 > change the version number in the following files:
 
@@ -119,41 +120,33 @@ Note that these four grunt tasks can be run using a single command:
     $ git add -A
     $ git commit -m "new release: [next.version.tag] - [brief details of the changes]"
 
-> finish the release
-
-    $ git flow release finish [next.version.tag]
-
 > and push everything to GitHub
 
     $ git push
     $ git push --tags
 
-I'm still working out how releases are published on the GitHub website. At the moment I'm doing releases manually on the website in addition to the above steps. This is probably a Bad Approach, and anyone willing to offer me A Clue on how to do it properly will have my deepest gratitude.
+> make a pull request on GitHub
 
 # Docker
 
-I'm very new to Docker, but in an attempt to solve the very, very slow server situation I'm playing with an nginx docker container.
+An alternative to the (very, very) slow grunt server situation
+
+1. Install docker 
 
 https://www.docker.com/
 https://docs.docker.com/engine/userguide/containers/usingdocker/
 https://hub.docker.com/_/nginx/
 
-I've added a Dockerfile and .dockerignore files to the base of the git.
+2. In the docker quickstart shell, navigate to the cloned Scrawl-canvas directory
 
-In the docker quickstart shell
+3. Run the following command: 
+> ./dev/run.sh
 
-> docker build -t scrawl-canvas-docker </absolute/path/to/local/scrawl-canvas/directory> 
-(do once, can also, in the quickstart shell, navigate to the scrawl folder and run '> docker build -t scrawl-canvas-docker .')
-
-> docker rm scrawl-nginx (if run previously)
-> docker run --name scrawl-nginx -d -p 8080:80 scrawl-canvas-docker
-
-When opening the docker quickstart shell (on windows using virtualbox) the text under the whale gives info about connecting to the virtual machine - for me this is 'default' machine with an ip of (eg) 192.168.99.100 . I can get the ip again by running:
-
+4. Find out the correct local url: 
 > docker-machine ip default
+('default' is the name of the vm in virtualbox - could be different')
 
-To view the demo pages, navigate to (for the above ip) http://192.168.99.100:8080/demos/index.html
+5. View the demos at http://<your_local_url>/demos/index.html
 
-### Next up
-
-* work out how to view changes to code - I expect I'll have to stop and restart the container
+6. At end of session, clean up by running: 
+> ./dev/halt.sh

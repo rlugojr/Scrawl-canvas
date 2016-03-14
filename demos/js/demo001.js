@@ -18,6 +18,7 @@ var mycode = function() {
 		text: 'Hello, Scrawl World!',
 		startX: 50,
 		startY: 50,
+		fillStyle: 'red'
 	});
 
 	//update the canvas display
@@ -39,5 +40,5 @@ scrawl.loadExtensions({
 			scrawl.init();
 			mycode();
 		}, false);
-	},
+	}
 });

@@ -1,7 +1,0 @@
-.dockerignore
-.gitattributes
-.gitignore
-Dockerfile
-*.json
-*.js
-node_modules

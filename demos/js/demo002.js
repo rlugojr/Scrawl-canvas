@@ -63,6 +63,6 @@ scrawl.loadExtensions({
 		window.addEventListener('load', function() {
 			scrawl.init();
 			mycode();
-		}, false);
+		}, false)
 	},
 });

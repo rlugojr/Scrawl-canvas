@@ -77,7 +77,6 @@ February - March 2016
 		- new webworker files in source directory
 		- all at very early stage of planning
 
-
 160214
 	- version 5.0.4 released
 	- inline documentation updated

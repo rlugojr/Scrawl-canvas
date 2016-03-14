@@ -2776,6 +2776,8 @@ Feature detection
 		this.getImagesDeviceData();
 		this.checkTouch();
 
+		//web workers can't use session storage - dammit!!!
+		// sessionStorage.setItem('myCat', 'My cat is called JoJo');
 		setTimeout(function() {
 			my.work.webworkerPool.test2.onmessage = function(e) {
 				console.log('Message received from test2 worker', typeof e, e);
