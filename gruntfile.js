@@ -113,6 +113,7 @@ module.exports = function(grunt){
 	grunt.registerTask('docs', ['yuidoc']);
 	grunt.registerTask('lint', ['jshint']);
 	grunt.registerTask('beautify', ['jsbeautifier']);
+	grunt.registerTask('clean', ['watch']);
 	grunt.registerTask('server', ['express', 'open', 'watch']);
 	grunt.registerTask('default', ['jsbeautifier', 'jshint']);
 };

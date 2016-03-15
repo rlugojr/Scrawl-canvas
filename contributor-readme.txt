@@ -1,6 +1,7 @@
 # For Developers who want to make Scrawl.js even better
+(These instructions are as much for my benefit as for yours)
 
-I'm assuming that you have 'node' already installed on your local machine, alongside 'git', 'grunt' and 'git flow'. These instructions are as much for my benefit as for yours.
+I'm assuming that you have 'node' already installed on your local machine, alongside 'git', 'grunt' and 'git flow'. 
 
 I'm also assuming that you know how to drive a GitHub repository thingy ...
 
@@ -71,10 +72,16 @@ To start the server:
 
 Be aware that the server will often take its own sweet time to stir itself into action and display the index page. The page will display on your default browser, but can also be (simultaneously) tested in other browsers by copy-pasting the page address over to them. 
 
-NOTE: lately the server has been getting very, very slow. I'm currently experimenting with Docker containers and nginx to see if I can get things speeded up - see bottom of this page.
+### Alternatives to grunt-express
 
-An alternative approach is to navigate to the demos folder and start http-server
-- doesn't refresh pages when code starts - probably not a bad thing
+Lately the server has been getting very, very slow. I'm currently experimenting with Docker containers and nginx to see if I can get things speeded up - see bottom of this page.
+
+For non-Docker folks, an alternative approach is to navigate to the demos folder and start a node server:
+(doesn't refresh pages when code changes - probably not a Bad Thing)
+
+    $ http-server
+
+The demo index page can then be viewed at localhost:8080
 
 ## New releases
 
@@ -127,9 +134,9 @@ Note that these four grunt tasks can be run using a single command:
 
 > make a pull request on GitHub
 
-# Docker
+## Docker
 
-An alternative to the (very, very) slow grunt server situation
+An alternative to the (very, very) slow grunt server situation ... (currently tested only on a Windows machine)
 
 1. Install docker 
 
@@ -140,13 +147,19 @@ https://hub.docker.com/_/nginx/
 2. In the docker quickstart shell, navigate to the cloned Scrawl-canvas directory
 
 3. Run the following command: 
-> ./dev/run.sh
 
-4. Find out the correct local url: 
-> docker-machine ip default
-('default' is the name of the vm in virtualbox - could be different')
+    $ ./dev/run.sh
 
-5. View the demos at http://<your_local_url>/demos/index.html
+4. To make sure changed files comply with lint and beautifier standards, run: 
 
-6. At end of session, clean up by running: 
-> ./dev/halt.sh
+    $ grunt clean
+
+5. Find out the correct local url ('default' is the name of my Docker vm in virtualbox - yours could be different)
+
+    $ docker-machine ip default
+
+6. View the demos at http://<your_local_url>/demos/index.html
+
+7. At end of session, clean up by running: 
+
+    $ ./dev/halt.sh
