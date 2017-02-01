@@ -5744,22 +5744,27 @@ Set the Cell's &lt;canvas&gt; context engine to the specification supplied by th
 			entityContext,
 			cellEngine,
 			changes,
+			changesKeys,
 			cName,
 			eName,
 			ctx = my.ctx,
 			action = this.setEngineActions,
-			stat1 = ['Gradient', 'RadialGradient', 'Pattern'];
+			stat1 = ['Gradient', 'RadialGradient', 'Pattern'],
+			i, iz, key, item;
 		if (!entity.fastStamp) {
 			cellContext = ctx[this.context];
 			entityContext = ctx[entity.context];
 			changes = entityContext.getChanges(entity, cellContext);
-			if (Object.keys(changes).length > 0) {
+			changesKeys = Object.keys(changes);
+			if (changesKeys.length > 0) {
 				cellEngine = my.context[this.name];
 				eName = entity.name;
 				cName = this.name;
-				for (var item in changes) {
-					action[item](changes[item], cellEngine, stat1, eName, cName);
-					cellContext[item] = changes[item];
+				for (i = 0, iz = changesKeys.length; i < iz; i++) {
+					key = changesKeys[i];
+					item = changes[key];
+					action[key](item, cellEngine, stat1, eName, cName);
+					cellContext[key] = item;
 				}
 			}
 		}
@@ -5767,11 +5772,9 @@ Set the Cell's &lt;canvas&gt; context engine to the specification supplied by th
 	};
 	my.Cell.prototype.setEngineActions = {
 		fillStyle: function(item, e, s, entity, cell) {
-			var d = my.design,
-				design;
+			var design = my.design[item];
 			e.fillStyle = item;
-			if (!(typeof d[item] == 'undefined')) {
-				design = d[item];
+			if (design) {
 				if (s.indexOf(design.type) >= 0) {
 					design.update(entity, cell);
 				}
@@ -5791,7 +5794,6 @@ Set the Cell's &lt;canvas&gt; context engine to the specification supplied by th
 			e.lineCap = item;
 		},
 		lineDash: function(item, e) {
-			e.lineDash = item;
 			if (e.setLineDash) {
 				e.setLineDash(item);
 			}
@@ -5818,11 +5820,9 @@ Set the Cell's &lt;canvas&gt; context engine to the specification supplied by th
 			e.shadowOffsetY = item;
 		},
 		strokeStyle: function(item, e, s, entity, cell) {
-			var d = my.design,
-				design;
+			var design = my.design[item];
 			e.strokeStyle = item;
-			if (!(typeof d[item] == 'undefined')) {
-				design = d[item];
+			if (design) {
 				if (s.indexOf(design.type) >= 0) {
 					design.update(entity, cell);
 				}
@@ -6312,16 +6312,6 @@ Color, gradient or pattern used to fill a entity. Can be:
 **/
 		fillStyle: '#000000',
 		/**
-Shape and Path entity fill method. Can be:
-
-* 'nonzero' - all areas enclosed by the entity's path are flooded
-* 'evenodd' - only 'odd' areas of the entity's path are flooded
-@property winding
-@type String
-@default 'nonzero'
-**/
-		winding: 'nonzero',
-		/**
 Color, gradient or pattern used to outline a entity. Can be:
 
 * Cascading Style Sheet format color String - '#fff', '#ffffff', 'rgb(255,255,255)', 'rgba(255,255,255,1)', 'white'
@@ -6548,28 +6538,6 @@ Interrogates a &lt;canvas&gt; element's context engine and populates its own att
 		return this;
 	};
 	/**
-Interrogates a &lt;canvas&gt; element's context engine and returns an object of non-default attributes
-@private
-**/
-	// my.Context.prototype.getNonDefaultAttributes = function() {
-	// 	var d = my.work.d.Context,
-	// 		xt = my.xt,
-	// 		keys = my.work.contextKeys,
-	// 		key,
-	// 		i, iz,
-	// 		result = {};
-	// 	for (i = 0, iz = keys.length; i < iz; i++) {
-	// 		key = keys[i];
-	// 		if (key === 'lineDash' && this.lineDash && this.lineDash.length > 0) {
-	// 			result.lineDash = this.lineDash;
-	// 		}
-	// 		else if (xt(this[key]) && this[key] != d[key]) {
-	// 			result[key] = this[key];
-	// 		}
-	// 	}
-	// 	return result;
-	// };
-	/**
 Compares an entity's context engine values (held in this context object) to those held for the relevant cell's context engine
 
 (Only for use by Context objects)
@@ -6580,89 +6548,61 @@ Compares an entity's context engine values (held in this context object) to thos
 @private
 **/
 	my.Context.prototype.getChanges = function(entity, ctx) {
-		// var c = ctx.getNonDefaultAttributes(),
-		// 	ca = Object.keys(c),
-		// 	cKey,
-		// 	e = this.getNonDefaultAttributes(),
-		// 	ea = Object.keys(e),
-		// 	eKey,
-		// 	df = my.work.d.Context,
-		// 	result = {},
-		// 	contains = my.contains,
-		// 	test = ['fillStyle', 'strokeStyle', 'shadowColor'],
-		// 	i, iz;
-		// for (i = 0, iz = ca.length; i < iz; i++) {
-		// 	cKey = ca[i];
-		// 	if (!contains(ea, cKey)) {
-		// 		result[cKey] = df[cKey];
-		// 	}
-		// }
-		// for (i = 0, iz = ea.length; i < iz; i++) {
-		// 	eKey = ea[i];
-		// 	if (eKey === 'lineWidth' && entity.scaleOutline) {
-		// 		if (e.lineWidth * entity.scale !== c.lineWidth) {
-		// 			result.lineWidth = e.lineWidth * entity.scale;
-		// 		}
-		// 	}
-		// 	else if (e[eKey] != c[eKey]) {
-		// 		result[eKey] = e[eKey];
-		// 	}
-		// 	else if (contains(test, eKey)) {
-		// 		// because we can store design names in these attributes, not their actual values
-		// 		// and the names will not change but the values can
-		// 		result = this.getDesignChanges(eKey, e, c, result);
-		// 	}
-		// }
-		// return result;
-
-		// NOT CONVINCED YET!
 		var keys = my.work.contextKeys,
-			k, i, d, iz, color, scaled,
+			k, d, color, scaled, i, iz, j, jz,
 			test = ['fillStyle', 'strokeStyle', 'shadowColor'],
-			inter = {},
-			interKeys,
+			ldFlag, currentE, currentC, 
+			dx = my.work.d.Context,
 			result = {};
 		for(i = 0, iz = keys.length; i < iz; i++){
 			k = keys[i];
+			currentE = (typeof this[k] != 'undefined') ? this[k] : dx[k];
+			currentC = (typeof ctx[k] != 'undefined') ? ctx[k] : dx[k];
 			if (k == 'lineDash'){
-				if ((this.lineDash && this.lineDash.length > 0) || (ctx.lineDash && ctx.lineDash.length > 0)) {
-					result.lineDash = (this.lineDash.length > 0) ? this.lineDash : [];
+				if (currentE.length || currentC.length) {
+					if(currentE.length != currentC.length){
+						result.lineDash = currentE;
+					}
+					else{
+						ldFlag = false;
+						for(j = 0, jz = currentE.length; j < jz; j++){
+							if(currentE[j] != currentC[j]){
+								ldFlag = true;
+								break;
+							}
+						}
+						if(ldFlag){
+							result.lineDash = currentE;
+						}
+					}
 				}
 			}
-			else {
-				if(this[k] || ctx[k]){
-					if(test.indexOf(k) >= 0){
-						d = my.design[k];
-						if(d && d.type == 'Color'){
+			else if (k == 'lineWidth' && entity.scaleOutline) {
+				scaled = (currentE || 1) * (entity.scale || 1);
+				if (scaled != currentC) {
+					result.lineWidth = scaled;
+				}
+			}
+			else if(currentC == currentE){
+				if(test.indexOf(k) >= 0){
+					d = my.design[k];
+					if(d){
+						if(d.type == 'Color'){
 							color = d.getData();
-							if(color != ctx[k]){
+							if(color != currentE){
 								result[k] = color;
 							}
 						}
-						else if (k != 'shadowColor' && d && d.autoUpdate) {
-							result[k] = this[k];
+						else if (k != 'shadowColor' && d.autoUpdate) {
+							result[k] = currentE;
 						}
-					}
-					else if (k === 'lineWidth' && entity.scaleOutline) {
-						scaled = this.lineWidth * entity.scale;
-						if (scaled !== ctx.lineWidth) {
-							result.lineWidth = scaled;
-						}
-					}
-					else if(this[k] != ctx[k]){
-						result[k] = this[k];
 					}
 				}
 			}
+			else{
+				result[k] = currentE
+			}
 		}
-		// interKeys = Object.keys(inter);
-		// for(i = 0, iz = interKeys.length; i < iz; i++){
-		// 	k = interKeys[i];
-		// 	d = inter[k];
-		// 	if(d && !(isNaN(d))){
-		// 		result[k] = d;
-		// 	}
-		// }
 		return result;
 	};
 	/**
