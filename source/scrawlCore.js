@@ -968,9 +968,26 @@ A __utility__ function for variable type checking
 		var slice,
 			i,
 			iz;
-		slice = arguments;
-		if (Array.isArray(arguments[0])) {
-			slice = arguments[0];
+	// 	slice = arguments;
+	// 	if (Array.isArray(arguments[0])) {
+	// 		slice = arguments[0];
+	// 	}
+	// 	if (slice.length > 0) {
+	// 		for (i = 0, iz = slice.length; i < iz; i++) {
+	// 			if (typeof slice[i] === 'undefined') {
+	// 				return false;
+	// 			}
+	// 		}
+	// 		return true;
+	// 	}
+	// 	return false;
+	// };
+		slice = [];
+		for(i = 0, iz = arguments.length; i < iz; i++){
+			slice[i] = arguments[i];
+		}
+		if(Array.isArray(slice[0])){
+			slice = slice[0];
 		}
 		if (slice.length > 0) {
 			for (i = 0, iz = slice.length; i < iz; i++) {
@@ -982,6 +999,7 @@ A __utility__ function for variable type checking
 		}
 		return false;
 	};
+
 	/**
 A __utility__ function for variable type checking
 @method xto
@@ -997,9 +1015,16 @@ A __utility__ function for variable type checking
 		var slice,
 			i,
 			iz;
-		slice = arguments;
-		if (Array.isArray(arguments[0])) {
-			slice = arguments[0];
+		// slice = arguments;
+		// if (Array.isArray(arguments[0])) {
+		// 	slice = arguments[0];
+		// }
+		slice = [];
+		for(i = 0, iz = arguments.length; i < iz; i++){
+			slice[i] = arguments[i];
+		}
+		if(Array.isArray(slice[0])){
+			slice = slice[0];
 		}
 		if (slice.length > 0) {
 			for (i = 0, iz = slice.length; i < iz; i++) {
@@ -6526,24 +6551,24 @@ Interrogates a &lt;canvas&gt; element's context engine and populates its own att
 Interrogates a &lt;canvas&gt; element's context engine and returns an object of non-default attributes
 @private
 **/
-	my.Context.prototype.getNonDefaultAttributes = function() {
-		var d = my.work.d.Context,
-			xt = my.xt,
-			keys = my.work.contextKeys,
-			key,
-			i, iz,
-			result = {};
-		for (i = 0, iz = keys.length; i < iz; i++) {
-			key = keys[i];
-			if (key === 'lineDash' && this.lineDash && this.lineDash.length > 0) {
-				result.lineDash = this.lineDash;
-			}
-			else if (xt(this[key]) && this[key] != d[key]) {
-				result[key] = this[key];
-			}
-		}
-		return result;
-	};
+	// my.Context.prototype.getNonDefaultAttributes = function() {
+	// 	var d = my.work.d.Context,
+	// 		xt = my.xt,
+	// 		keys = my.work.contextKeys,
+	// 		key,
+	// 		i, iz,
+	// 		result = {};
+	// 	for (i = 0, iz = keys.length; i < iz; i++) {
+	// 		key = keys[i];
+	// 		if (key === 'lineDash' && this.lineDash && this.lineDash.length > 0) {
+	// 			result.lineDash = this.lineDash;
+	// 		}
+	// 		else if (xt(this[key]) && this[key] != d[key]) {
+	// 			result[key] = this[key];
+	// 		}
+	// 	}
+	// 	return result;
+	// };
 	/**
 Compares an entity's context engine values (held in this context object) to those held for the relevant cell's context engine
 
@@ -6555,39 +6580,89 @@ Compares an entity's context engine values (held in this context object) to thos
 @private
 **/
 	my.Context.prototype.getChanges = function(entity, ctx) {
-		var c = ctx.getNonDefaultAttributes(),
-			ca = Object.keys(c),
-			cKey,
-			e = this.getNonDefaultAttributes(),
-			ea = Object.keys(e),
-			eKey,
-			df = my.work.d.Context,
-			result = {},
-			contains = my.contains,
+		// var c = ctx.getNonDefaultAttributes(),
+		// 	ca = Object.keys(c),
+		// 	cKey,
+		// 	e = this.getNonDefaultAttributes(),
+		// 	ea = Object.keys(e),
+		// 	eKey,
+		// 	df = my.work.d.Context,
+		// 	result = {},
+		// 	contains = my.contains,
+		// 	test = ['fillStyle', 'strokeStyle', 'shadowColor'],
+		// 	i, iz;
+		// for (i = 0, iz = ca.length; i < iz; i++) {
+		// 	cKey = ca[i];
+		// 	if (!contains(ea, cKey)) {
+		// 		result[cKey] = df[cKey];
+		// 	}
+		// }
+		// for (i = 0, iz = ea.length; i < iz; i++) {
+		// 	eKey = ea[i];
+		// 	if (eKey === 'lineWidth' && entity.scaleOutline) {
+		// 		if (e.lineWidth * entity.scale !== c.lineWidth) {
+		// 			result.lineWidth = e.lineWidth * entity.scale;
+		// 		}
+		// 	}
+		// 	else if (e[eKey] != c[eKey]) {
+		// 		result[eKey] = e[eKey];
+		// 	}
+		// 	else if (contains(test, eKey)) {
+		// 		// because we can store design names in these attributes, not their actual values
+		// 		// and the names will not change but the values can
+		// 		result = this.getDesignChanges(eKey, e, c, result);
+		// 	}
+		// }
+		// return result;
+
+		// NOT CONVINCED YET!
+		var keys = my.work.contextKeys,
+			k, i, d, iz, color, scaled,
 			test = ['fillStyle', 'strokeStyle', 'shadowColor'],
-			i, iz;
-		for (i = 0, iz = ca.length; i < iz; i++) {
-			cKey = ca[i];
-			if (!contains(ea, cKey)) {
-				result[cKey] = df[cKey];
-			}
-		}
-		for (i = 0, iz = ea.length; i < iz; i++) {
-			eKey = ea[i];
-			if (eKey === 'lineWidth' && entity.scaleOutline) {
-				if (e.lineWidth * entity.scale !== c.lineWidth) {
-					result.lineWidth = e.lineWidth * entity.scale;
+			inter = {},
+			interKeys,
+			result = {};
+		for(i = 0, iz = keys.length; i < iz; i++){
+			k = keys[i];
+			if (k == 'lineDash'){
+				if ((this.lineDash && this.lineDash.length > 0) || (ctx.lineDash && ctx.lineDash.length > 0)) {
+					result.lineDash = (this.lineDash.length > 0) ? this.lineDash : [];
 				}
 			}
-			else if (e[eKey] != c[eKey]) {
-				result[eKey] = e[eKey];
-			}
-			else if (contains(test, eKey)) {
-				// because we can store design names in these attributes, not their actual values
-				// and the names will not change but the values can
-				result = this.getDesignChanges(eKey, e, c, result);
+			else {
+				if(this[k] || ctx[k]){
+					if(test.indexOf(k) >= 0){
+						d = my.design[k];
+						if(d && d.type == 'Color'){
+							color = d.getData();
+							if(color != ctx[k]){
+								result[k] = color;
+							}
+						}
+						else if (k != 'shadowColor' && d && d.autoUpdate) {
+							result[k] = this[k];
+						}
+					}
+					else if (k === 'lineWidth' && entity.scaleOutline) {
+						scaled = this.lineWidth * entity.scale;
+						if (scaled !== ctx.lineWidth) {
+							result.lineWidth = scaled;
+						}
+					}
+					else if(this[k] != ctx[k]){
+						result[k] = this[k];
+					}
+				}
 			}
 		}
+		// interKeys = Object.keys(inter);
+		// for(i = 0, iz = interKeys.length; i < iz; i++){
+		// 	k = interKeys[i];
+		// 	d = inter[k];
+		// 	if(d && !(isNaN(d))){
+		// 		result[k] = d;
+		// 	}
+		// }
 		return result;
 	};
 	/**
@@ -6598,20 +6673,20 @@ getChanges helper
 @return a results object containing changes to be made to the canvas context engine
 @private
 **/
-	my.Context.prototype.getDesignChanges = function(eKey, e, c, result) {
-		var d, color;
-		d = my.design[e[eKey]];
-		if (d && d.type === 'Color') {
-			color = d.getData();
-			if (color !== c[eKey]) {
-				result[eKey] = color;
-			}
-		}
-		else if (eKey != 'shadowColor' && d && d.autoUpdate) {
-			result[eKey] = e[eKey];
-		}
-		return result;
-	};
+	// my.Context.prototype.getDesignChanges = function(eKey, e, c, result) {
+	// 	var d, color;
+	// 	d = my.design[e[eKey]];
+	// 	if (d && d.type === 'Color') {
+	// 		color = d.getData();
+	// 		if (color !== c[eKey]) {
+	// 			result[eKey] = color;
+	// 		}
+	// 	}
+	// 	else if (eKey != 'shadowColor' && d && d.autoUpdate) {
+	// 		result[eKey] = e[eKey];
+	// 	}
+	// 	return result;
+	// };
 
 	/**
 # Group
