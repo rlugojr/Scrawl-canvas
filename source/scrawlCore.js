@@ -6044,8 +6044,8 @@ Cell.setPaste update pasteData object values
 			start = this.currentStart,
 			get = my.xtGet;
 		if (my.xta(display, base)) {
-			width = (this.name === pad.base) ? display.actualWidth : get(base.actualWidth, this.actualWidth, 300);
-			height = (this.name === pad.base) ? display.actualHeight : get(base.actualHeight, this.actualHeight, 150);
+			width = (isBase) ? display.actualWidth : get(base.actualWidth, this.actualWidth, 300);
+			height = (isBase) ? display.actualHeight : get(base.actualHeight, this.actualHeight, 150);
 			if (!start.flag) {
 				if (!this.reference) {
 					this.setReference();
@@ -6358,9 +6358,9 @@ _Be aware that different browsers render these operations in different ways, and
 Line width, in pixels
 @property lineWidth
 @type Number
-@default 1
+@default 0
 **/
-		lineWidth: 1,
+		lineWidth: 0,
 		/**
 Line cap styling. Permitted values include:
 
@@ -6532,7 +6532,7 @@ Interrogates a &lt;canvas&gt; element's context engine and populates its own att
 			key = keys[i];
 			this[key] = ctx[key];
 		}
-		this.winding = get(ctx.mozFillRule, ctx.msFillRule, 'nonzero');
+		// this.winding = get(ctx.mozFillRule, ctx.msFillRule, 'nonzero');
 		this.lineDash = (my.xt(ctx.lineDash)) ? ctx.lineDash : [];
 		this.lineDashOffset = get(ctx.mozDashOffset, ctx.lineDashOffset, 0);
 		return this;
@@ -6548,54 +6548,75 @@ Compares an entity's context engine values (held in this context object) to thos
 @private
 **/
 	my.Context.prototype.getChanges = function(entity, ctx) {
-		var keys = my.work.contextKeys,
+		// var keys = my.work.contextKeys,
+		var mainKeys = ['globalAlpha', 'globalCompositeOperation', 'shadowOffsetX', 'shadowOffsetY', 'shadowBlur'],
+			lineKeys = ['lineWidth', 'lineCap', 'lineJoin', 'lineDash', 'lineDashOffset', 'miterLimit'],
+			styleKeys = ['fillStyle', 'strokeStyle', 'shadowColor'],
+			textKeys = ['font', 'textAlign', 'textBaseline'],
 			k, d, color, scaled, i, iz, j, jz,
-			test = ['fillStyle', 'strokeStyle', 'shadowColor'],
+			// test = ['fillStyle', 'strokeStyle', 'shadowColor'],
 			ldFlag, currentE, currentC, 
 			dx = my.work.d.Context,
 			result = {};
-		for(i = 0, iz = keys.length; i < iz; i++){
-			k = keys[i];
+
+		for(i = 0, iz = mainKeys.length; i < iz; i++){
+			k = mainKeys[i];
 			currentE = (typeof this[k] != 'undefined') ? this[k] : dx[k];
 			currentC = (typeof ctx[k] != 'undefined') ? ctx[k] : dx[k];
-			if (k == 'lineDash'){
-				if (currentE.length || currentC.length) {
-					if(currentE.length != currentC.length){
-						result.lineDash = currentE;
-					}
-					else{
-						ldFlag = false;
-						for(j = 0, jz = currentE.length; j < jz; j++){
-							if(currentE[j] != currentC[j]){
-								ldFlag = true;
-								break;
-							}
-						}
-						if(ldFlag){
+			if(currentC !== currentE){
+				result[k] = currentE
+			}
+		}
+		if(this.lineWidth || ctx.lineWidth){
+			for(i = 0, iz = lineKeys.length; i < iz; i++){
+				k = lineKeys[i];
+				currentE = (typeof this[k] != 'undefined') ? this[k] : dx[k];
+				currentC = (typeof ctx[k] != 'undefined') ? ctx[k] : dx[k];
+				if (k == 'lineDash'){
+					if (currentE.length || currentC.length) {
+						if(currentE.length != currentC.length){
 							result.lineDash = currentE;
 						}
-					}
-				}
-			}
-			else if (k == 'lineWidth' && entity.scaleOutline) {
-				scaled = (currentE || 1) * (entity.scale || 1);
-				if (scaled != currentC) {
-					result.lineWidth = scaled;
-				}
-			}
-			else if(currentC == currentE){
-				if(test.indexOf(k) >= 0){
-					d = my.design[k];
-					if(d){
-						if(d.type == 'Color'){
-							color = d.getData();
-							if(color != currentE){
-								result[k] = color;
+						else{
+							ldFlag = false;
+							for(j = 0, jz = currentE.length; j < jz; j++){
+								if(currentE[j] != currentC[j]){
+									ldFlag = true;
+									break;
+								}
+							}
+							if(ldFlag){
+								result.lineDash = currentE;
 							}
 						}
-						else if (k != 'shadowColor' && d.autoUpdate) {
-							result[k] = currentE;
+					}
+				}
+				else if (k == 'lineWidth' && entity.scaleOutline) {
+					scaled = (currentE || 1) * (entity.scale || 1);
+					if (scaled != currentC) {
+						result.lineWidth = scaled;
+					}
+				}
+				else if(currentC !== currentE){
+					result[k] = currentE
+				}
+			}
+		}
+		for(i = 0, iz = styleKeys.length; i < iz; i++){
+			k = styleKeys[i];
+			currentE = (typeof this[k] != 'undefined') ? this[k] : dx[k];
+			currentC = (typeof ctx[k] != 'undefined') ? ctx[k] : dx[k];
+			if(currentC === currentE){
+				d = my.design[k];
+				if(d){
+					if(d.type == 'Color'){
+						color = d.getData();
+						if(color != currentE){
+							result[k] = color;
 						}
+					}
+					else if (k != 'shadowColor' && d.autoUpdate) {
+						result[k] = currentE;
 					}
 				}
 			}
@@ -6603,30 +6624,67 @@ Compares an entity's context engine values (held in this context object) to thos
 				result[k] = currentE
 			}
 		}
+		if(entity.type === 'Phrase'){
+			for(i = 0, iz = textKeys.length; i < iz; i++){
+				k = textKeys[i];
+				currentE = (typeof this[k] != 'undefined') ? this[k] : dx[k];
+				currentC = (typeof ctx[k] != 'undefined') ? ctx[k] : dx[k];
+				if(currentC !== currentE){
+					result[k] = currentE
+				}
+			}
+		}
+		// for(i = 0, iz = keys.length; i < iz; i++){
+		// 	k = keys[i];
+		// 	currentE = (typeof this[k] != 'undefined') ? this[k] : dx[k];
+		// 	currentC = (typeof ctx[k] != 'undefined') ? ctx[k] : dx[k];
+		// 	if (k == 'lineDash'){
+		// 		if (currentE.length || currentC.length) {
+		// 			if(currentE.length != currentC.length){
+		// 				result.lineDash = currentE;
+		// 			}
+		// 			else{
+		// 				ldFlag = false;
+		// 				for(j = 0, jz = currentE.length; j < jz; j++){
+		// 					if(currentE[j] != currentC[j]){
+		// 						ldFlag = true;
+		// 						break;
+		// 					}
+		// 				}
+		// 				if(ldFlag){
+		// 					result.lineDash = currentE;
+		// 				}
+		// 			}
+		// 		}
+		// 	}
+		// 	else if (k == 'lineWidth' && entity.scaleOutline) {
+		// 		scaled = (currentE || 1) * (entity.scale || 1);
+		// 		if (scaled != currentC) {
+		// 			result.lineWidth = scaled;
+		// 		}
+		// 	}
+		// 	else if(currentC == currentE){
+		// 		if(test.indexOf(k) >= 0){
+		// 			d = my.design[k];
+		// 			if(d){
+		// 				if(d.type == 'Color'){
+		// 					color = d.getData();
+		// 					if(color != currentE){
+		// 						result[k] = color;
+		// 					}
+		// 				}
+		// 				else if (k != 'shadowColor' && d.autoUpdate) {
+		// 					result[k] = currentE;
+		// 				}
+		// 			}
+		// 		}
+		// 	}
+		// 	else{
+		// 		result[k] = currentE
+		// 	}
+		// }
 		return result;
 	};
-	/**
-getChanges helper
-
-@method getDesignChanges
-@param {Object} ctx &lt;canvas&gt; element context engine Object
-@return a results object containing changes to be made to the canvas context engine
-@private
-**/
-	// my.Context.prototype.getDesignChanges = function(eKey, e, c, result) {
-	// 	var d, color;
-	// 	d = my.design[e[eKey]];
-	// 	if (d && d.type === 'Color') {
-	// 		color = d.getData();
-	// 		if (color !== c[eKey]) {
-	// 			result[eKey] = color;
-	// 		}
-	// 	}
-	// 	else if (eKey != 'shadowColor' && d && d.autoUpdate) {
-	// 		result[eKey] = e[eKey];
-	// 	}
-	// 	return result;
-	// };
 
 	/**
 # Group
@@ -6957,10 +7015,11 @@ Ask all entitys in the Group to perform a set() operation
 **/
 	my.Group.prototype.setEntitysTo = function(items) {
 		var entitys = this.entitys,
+			e = my.entity,
 			i,
 			iz;
 		for (i = 0, iz = entitys.length; i < iz; i++) {
-			my.entity[entitys[i]].set(items);
+			e[entitys[i]].set(items);
 		}
 		return this;
 	};
@@ -7111,9 +7170,9 @@ Augments Group.set()
 			xt = my.xt;
 		for (i = 0, iz = entitys.length; i < iz; i++) {
 			e = entity[entitys[i]];
-			if (xt(e)) {
+			// if (xt(e)) {
 				e.currentStart.flag = false;
-			}
+			// }
 		}
 		return this;
 	};
@@ -7132,9 +7191,9 @@ Augments Group.set()
 			xt = my.xt;
 		for (i = 0, iz = entitys.length; i < iz; i++) {
 			e = entity[entitys[i]];
-			if (xt(e)) {
+			// if (xt(e)) {
 				e.currentHandle.flag = false;
-			}
+			// }
 		}
 		return this;
 	};
@@ -7320,9 +7379,9 @@ Allows users to retrieve a entity's Context object's values via the entity
 	my.Entity.prototype.get = function(item) {
 		var xt = my.xt,
 			d = my.work.d;
-		if (xt(d.Base[item])) {
-			return my.Base.prototype.get.call(this, item);
-		}
+		// if (xt(d.Base[item])) {
+		// 	return my.Base.prototype.get.call(this, item);
+		// }
 		if (xt(d.Context[item])) {
 			return my.ctx[this.context].get(item);
 		}
@@ -7495,12 +7554,16 @@ Permitted methods include:
 	my.Entity.prototype.stamp = function(method, cellname, cell, mouse) {
 		var engine, ctx,
 			tempCellname, tempCell, tempEngine, tempGCO,
-			sFlag = !this.currentStart.flag,
-			hFlag = !this.currentHandle.flag,
-			multifilterFlag = false,
+			sFlag, hFlag, multifilterFlag,
+			// sFlag = !this.currentStart.flag,
+			// hFlag = !this.currentHandle.flag,
+			// multifilterFlag = false,
 			tempFilter, work;
 
 		if (this.visibility) {
+			sFlag = !this.currentStart.flag;
+			hFlag = !this.currentHandle.flag;
+			multifilterFlag = false;
 			if (!cell) {
 				cell = my.cell[cellname] || my.cell[my.group[this.group].cell];
 				cellname = cell.name;
