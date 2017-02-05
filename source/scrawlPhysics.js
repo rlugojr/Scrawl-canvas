@@ -215,7 +215,7 @@ A __factory__ function to generate new Force objects
 **/
 		my.Particle = function(items) {
 			var vec = my.makeVector,
-				d = my.work.d.Particle,
+				d = my.Particle.prototype.defs,
 				r,
 				get = my.xtGet;
 			my.Base.call(this, items);
@@ -257,7 +257,7 @@ A __factory__ function to generate new Force objects
 		my.Particle.prototype.type = 'Particle';
 		my.Particle.prototype.classname = 'entitynames';
 		my.Particle.prototype.order = 0; //included to allow normal entitys to sort themselves properly
-		my.work.d.Particle = {
+		my.Particle.prototype.defs = {
 			/**
 Current group
 @property group
@@ -386,7 +386,9 @@ Load Vector - recreated at the start of every calculation cycle iteration
 **/
 			load: my.makeVector(),
 		};
-		my.mergeInto(my.work.d.Particle, my.work.d.Scrawl);
+		my.mergeInto(my.Particle.prototype.defs, my.Base.prototype.defs);
+		my.Particle.prototype.getters = {};
+		my.mergeInto(my.Particle.prototype.getters, my.Base.prototype.getters);
 		/**
 Particle.getStartValues
 @method getStartValues
@@ -750,7 +752,7 @@ Delete a named Spring object from this Particle
 			}
 			return this;
 		};
-		//the following dummy functions allow Particle objects to play nicely as part of a wider entity Group object
+		// the following dummy functions allow Particle objects to play nicely as part of a wider entity Group object
 		/**
 Dummy function - required to allow Particles to be processed alongside Entity objects
 @method pickupEntity
@@ -843,7 +845,7 @@ Dummy function - required to allow Particles to be processed alongside Entity ob
 **/
 		my.Spring.prototype.type = 'Spring';
 		my.Spring.prototype.classname = 'springnames';
-		my.work.d.Spring = {
+		my.Spring.prototype.defs = {
 			/**
 First Particle PARTICLENAME
 @property start
@@ -904,7 +906,9 @@ Recalculated as part of each  calculation cycle iteration
 				z: 0
 			},
 		};
-		my.mergeInto(my.work.d.Spring, my.work.d.Scrawl);
+		my.mergeInto(my.Spring.prototype.defs, my.Base.prototype.defs);
+		my.Spring.prototype.getters = {};
+		my.mergeInto(my.Spring.prototype.getters, my.Base.prototype.getters);
 		/**
 Calculate the force exerted by the spring for this calculation cycle iteration
 @method update
@@ -983,20 +987,20 @@ Two forces are pre-defined by scrawl-canvas:
 **/
 		my.Force.prototype.type = 'Force';
 		my.Force.prototype.classname = 'forcenames';
-		my.work.d.Force = {
+		my.Force.prototype.defs = {
 			/**
 Anonymous function for calculating a force on a Particle
 
 Functions need to be in the form:
 
 	function(ball){
-		//get or build a Vector object to hold the result
+		// get or build a Vector object to hold the result
 		var result = scrawl.makeVector();	//creating the vector
 		var result = scrawl.work.workphys.v1;	//using an existing work vector: scrawl.work.workphys.v1 to v5
 
-		//calculate the force - Particle attributes are available via the _ball_ argument
+		// calculate the force - Particle attributes are available via the _ball_ argument
 		
-		//add the force to the Particle's load Vector
+		// add the force to the Particle's load Vector
 		ball.load.vectorAdd(result);
 		}
 
@@ -1006,7 +1010,9 @@ Functions need to be in the form:
 **/
 			fn: function() {},
 		};
-		my.mergeInto(my.work.d.Force, my.work.d.Scrawl);
+		my.mergeInto(my.Force.prototype.defs, my.Base.prototype.defs);
+		my.Force.prototype.getters = {};
+		my.mergeInto(my.Force.prototype.getters, my.Base.prototype.getters);
 		/**
 Calculate the force for this calculation cycle iteration
 @method run

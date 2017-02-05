@@ -94,21 +94,30 @@ A __factory__ function to generate new Phrase entitys
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 		my.Phrase = function Phrase(items) {
+			var d = this.defs,
+				get = my.xtGet;
 			items = my.safeObject(items);
 			my.Entity.call(this, items);
-			my.Position.prototype.set.call(this, items);
+			this.text = get(items.text , d.text);
+			this.style = get(items.style , d.style);
+			this.variant = get(items.variant , d.variant);
+			this.weight = get(items.weight , d.weight);
+			this.size = get(items.size , d.size);
+			this.metrics = get(items.metrics , d.metrics);
+			this.family = get(items.family , d.family);
+			this.lineHeight = get(items.lineHeight , d.lineHeight);
+			this.textAlongPath = get(items.textAlongPath , d.textAlongPath);
+			this.fixedWidth = get(items.fixedWidth , d.fixedWidth);
 			this.registerInLibrary();
 			this.texts = [];
-			this.lineHeight = my.xtGet(items.lineHeight, my.work.d.Phrase.lineHeight);
 			if (items.font) {
 				this.checkFont(items.font);
 			}
 			else {
-				this.constructFont();
+				this.constructFontFlag = true;
 			}
-			this.size = this.get('size');
-			this.multiline();
-			this.getMetrics();
+			this.getMetricsFlag = true;
+			this.multilineFlag = true;
 			return this;
 		};
 		my.Phrase.prototype = Object.create(my.Entity.prototype);
@@ -120,7 +129,7 @@ A __factory__ function to generate new Phrase entitys
 **/
 		my.Phrase.prototype.type = 'Phrase';
 		my.Phrase.prototype.classname = 'entitynames';
-		my.work.d.Phrase = {
+		my.Phrase.prototype.defs = {
 			/**
 Text string to be displayed - for multiline text, insert __\n__ where the text line breaks
 @property text
@@ -180,20 +189,6 @@ Multiline text - line height
 **/
 			lineHeight: 1.5,
 			/**
-Background color - any permitted CSS Color string
-@property backgroundColor
-@type String
-@default ''
-**/
-			backgroundColor: '',
-			/**
-Background margin - additional padding around the text (in pixels), colored in by the background color
-@property backgroundMargin
-@type Number
-@default 0
-**/
-			backgroundMargin: 0,
-			/**
 Text along path parameter - when placing text along a path, the text can be positioned in phrase blocks, word blocks or by individual letters. Permitted values: 'phrase', 'word', 'glyph' (for individual letters)
 
 _Note: the __path__ module needs to be added to the core to use this functionality_
@@ -222,81 +217,98 @@ Users should never interfere with Text objects, as they are destroyed and recrea
 **/
 			texts: [],
 		};
-		my.mergeInto(my.work.d.Phrase, my.work.d.Entity);
-		/**
-Augments Entity.set()
-
-Allows users to:
-* alter the font either by the font attribute, or by individual font content attributes
-* update the text
-* change other Entity and Phrase object attributes
-@method set
-@param {Object} items Object consisting of key:value attributes
-@return This
-@chainable
-**/
-		my.Phrase.prototype.set = function(items) {
-			var xt = my.xt;
-			my.Entity.prototype.set.call(this, items);
-			items = my.safeObject(items);
-			if (my.xto(items.text, items.size, items.scale, items.font, items.style, items.variant, items.metrics, items.family, items.lineHeight)) {
+		my.mergeInto(my.Phrase.prototype.defs, my.Entity.prototype.defs);
+		my.Phrase.prototype.getters = {};
+		my.mergeInto(my.Phrase.prototype.getters, my.Entity.prototype.getters);
+		my.Phrase.prototype.setters = {
+			text: function(item){
+				this.text = item;
 				this.currentHandle.flag = false;
-				if (xt(items.lineHeight)) {
-					this.lineHeight = items.lineHeight;
-				}
-				if (items.font) {
-					this.checkFont(items.font);
-				}
-				else {
-					this.constructFont();
-				}
-				if (xt(items.text)) {
-					this.multiline(items.text);
-				}
-			}
-			this.getMetrics();
-			return this;
-		};
-		/**
-Augments Entity.detDelta()
-@method setDelta
-@param {Object} items Object consisting of key:value attributes
-@return This
-@chainable
-**/
-		my.Phrase.prototype.setDelta = function(items) {
-			var xt = my.xt;
-			my.Entity.prototype.setDelta.call(this, items);
-			items = my.safeObject(items);
-			if (my.xto(items.text, items.size, items.scale, items.font, items.style, items.variant, items.metrics, items.family, items.lineHeight)) {
+				this.multilineFlag = true;
+				this.getMetricsFlag = true;
+			},
+			scale: function(item){
+				this.scale = item;
 				this.currentHandle.flag = false;
-				if (xt(items.lineHeight)) {
-					this.lineHeight += items.lineHeight;
-				}
-				if (items.font) {
-					this.checkFont(items.font);
-				}
-				else {
-					this.constructFont();
-				}
-				if (xt(items.text)) {
-					this.multiline(items.text);
-				}
-			}
-			this.getMetrics();
-			return this;
+				this.multilineFlag = true;
+				this.getMetricsFlag = true;
+			},
+			lineHeight: function(item){
+				this.lineHeight = item;
+				this.currentHandle.flag = false;
+				this.multilineFlag = true;
+				this.getMetricsFlag = true;
+			},
+			font: function(item){
+				this.font = item;
+				this.checkFont(item);
+				this.currentHandle.flag = false;
+				this.multilineFlag = true;
+				this.getMetricsFlag = true;
+			},
+			style: function(item){
+				this.style = item;
+				this.currentHandle.flag = false;
+				this.constructFontFlag = true;
+				this.multilineFlag = true;
+				this.getMetricsFlag = true;
+			},
+			variant: function(item){
+				this.variant = item;
+				this.currentHandle.flag = false;
+				this.constructFontFlag = true;
+				this.multilineFlag = true;
+				this.getMetricsFlag = true;
+			},
+			weight: function(item){
+				this.weight = item;
+				this.currentHandle.flag = false;
+				this.constructFontFlag = true;
+				this.multilineFlag = true;
+				this.getMetricsFlag = true;
+			},
+			size: function(item){
+				this.size = item;
+				this.currentHandle.flag = false;
+				this.constructFontFlag = true;
+				this.multilineFlag = true;
+				this.getMetricsFlag = true;
+			},
+			metrics: function(item){
+				this.metrics = item;
+				this.currentHandle.flag = false;
+				this.constructFontFlag = true;
+				this.multilineFlag = true;
+				this.getMetricsFlag = true;
+			},
+			family: function(item){
+				this.family = item;
+				this.currentHandle.flag = false;
+				this.constructFontFlag = true;
+				this.multilineFlag = true;
+				this.getMetricsFlag = true;
+			},
 		};
-		/**
-Augments Entity.clone()
-@method clone
-@param {Object} items Object consisting of key:value attributes, used to update the clone's attributes with new values
-@return Cloned object
-@chainable
-**/
-		my.Phrase.prototype.clone = function(items) {
-			items.texts = [];
-			return my.Entity.prototype.clone.call(this, items);
+		my.mergeInto(my.Phrase.prototype.setters, my.Entity.prototype.setters);
+		my.Phrase.prototype.deltaSetters = {
+			scale: function(item){
+				this.scale += item;
+				this.currentHandle.flag = false;
+				this.getMetricsFlag = true;
+			},
+			lineHeight: function(item){
+				this.lineHeight += item;
+				this.currentHandle.flag = false;
+				this.getMetricsFlag = true;
+			},
+			size: function(item){
+				this.size += item;
+				this.currentHandle.flag = false;
+				this.constructFontFlag = true;
+				this.getMetricsFlag = true;
+			},
 		};
+		my.mergeInto(my.Phrase.prototype.deltaSetters, my.Entity.prototype.deltaSetters);
 		/**
 Helper function - creates Text objects for each line of text in a multiline Phrase
 @method multiline
@@ -372,7 +384,7 @@ Helper function - creates font-related attributes from entity's Context object's
 				size,
 				metrics,
 				family,
-				d = my.work.d.Phrase,
+				d = my.Phrase.prototype.defs,
 				get = my.xtGet;
 			myFont = my.ctx[this.context].font;
 			style = get(this.style, d.style);
@@ -488,7 +500,7 @@ Helper function - creates entity's Context object's phrase attribute from other 
 				metrics,
 				family,
 				get = my.xtGet,
-				d = my.work.d.Phrase;
+				d = this.defs;
 			myFont = '';
 			style = get(this.style, d.style);
 			variant = get(this.variant, d.variant);
@@ -526,6 +538,20 @@ Augments Entity.stamp()
 				multifilterFlag = false,
 				tempFilter, work;
 			if (this.visibility) {
+				if(this.constructFontFlag){
+					this.constructFontFlag = false;
+					this.constructFont();
+				}
+				if(this.multilineFlag){
+					this.multiline(this.text);
+					this.currentHandle.flag = false;
+					this.multilineFlag = false;
+					this.getMetricsFlag = true;
+				}
+				if(this.getMetricsFlag){
+					this.getMetricsFlag = false;
+					this.getMetrics();
+				}
 				test = (my.entity[this.path] && my.entity[this.path].type === 'Path');
 				if (this.pivot || !test || this.get('textAlongPath') === 'phrase') {
 					my.Entity.prototype.stamp.call(this, method, cellname, cell, mouse);
@@ -634,9 +660,6 @@ Stamp helper function - perform a 'draw' method draw
 				ts = this.texts;
 			cell.setEngine(this);
 			this.rotateCell(ctx, cell);
-			if (my.xt(this.backgroundColor)) {
-				this.addBackgroundColor(ctx, here);
-			}
 			tX = here.x + o.x;
 			for (i = 0, iz = ts.length; i < iz; i++) {
 				tY = here.y + (textY * i) + o.y;
@@ -662,9 +685,6 @@ Stamp helper function - perform a 'fill' method draw
 				ts = this.texts;
 			cell.setEngine(this);
 			this.rotateCell(ctx, cell);
-			if (my.xt(this.backgroundColor)) {
-				this.addBackgroundColor(ctx, here);
-			}
 			tX = here.x + o.x;
 			for (i = 0, iz = ts.length; i < iz; i++) {
 				tY = here.y + (textY * i) + o.y;
@@ -690,9 +710,6 @@ Stamp helper function - perform a 'drawFill' method draw
 				ts = this.texts;
 			cell.setEngine(this);
 			this.rotateCell(ctx, cell);
-			if (my.xt(this.backgroundColor)) {
-				this.addBackgroundColor(ctx, here);
-			}
 			tX = here.x + o.x;
 			for (i = 0, iz = ts.length; i < iz; i++) {
 				tY = here.y + (textY * i) + o.y;
@@ -718,9 +735,6 @@ Stamp helper function - perform a 'fillDraw' method draw
 				ts = this.texts;
 			cell.setEngine(this);
 			this.rotateCell(ctx, cell);
-			if (my.xt(this.backgroundColor)) {
-				this.addBackgroundColor(ctx, here);
-			}
 			tX = here.x + o.x;
 			for (i = 0, iz = ts.length; i < iz; i++) {
 				tY = here.y + (textY * i) + o.y;
@@ -746,9 +760,6 @@ Stamp helper function - perform a 'sinkInto' method draw
 				ts = this.texts;
 			cell.setEngine(this);
 			this.rotateCell(ctx, cell);
-			if (my.xt(this.backgroundColor)) {
-				this.addBackgroundColor(ctx, here);
-			}
 			tX = here.x + o.x;
 			for (i = 0, iz = ts.length; i < iz; i++) {
 				tY = here.y + (textY * i) + o.y;
@@ -774,9 +785,6 @@ Stamp helper function - perform a 'floatOver' method draw
 				ts = this.texts;
 			cell.setEngine(this);
 			this.rotateCell(ctx, cell);
-			if (my.xt(this.backgroundColor)) {
-				addBackgroundColor(ctx, here);
-			}
 			tX = here.x + o.x;
 			for (i = 0, iz = ts.length; i < iz; i++) {
 				tY = here.y + (textY * i) + o.y;
@@ -821,31 +829,6 @@ Helper function - calculate entity's width and height attributes, taking into ac
 			}
 			this.width = w;
 			this.height = h;
-			return this;
-		};
-		/**
-Drawing function - stamps a background block onto the &lt;canvas&gt; element
-@method addBackgroundColor
-@param {Object} ctx JavaScript context engine for Cell's &lt;canvas&gt; element
-@param {Vector} here Start coordinates for rectangle
-@return This
-@chainable
-@private
-**/
-		my.Phrase.prototype.addBackgroundColor = function(ctx, here) {
-			var h,
-				w,
-				margin,
-				topX,
-				topY;
-			margin = this.get('backgroundMargin');
-			topX = here.x - margin;
-			topY = here.y - margin;
-			w = (this.width * this.scale) + (margin * 2);
-			h = (this.height * this.scale) + (margin * 2);
-			ctx.fillStyle = this.backgroundColor;
-			ctx.fillRect(topX, topY, w, h);
-			ctx.fillStyle = my.ctx[this.context].get('fillStyle');
 			return this;
 		};
 		/**
@@ -922,9 +905,9 @@ Returns an object with coordinates __x__ and __y__
 **/
 		my.Text = function Text(items) {
 			var get = my.xtGet,
-			pu = my.pushUnique,
-			d = my.work.d.Text,
-			e;
+				pu = my.pushUnique,
+				d = my.Text.prototype.defs,
+				e;
 			items = my.safeObject(items);
 			my.Base.call(this, items);
 			this.text = get(items.text, d.text);
@@ -950,7 +933,7 @@ Returns an object with coordinates __x__ and __y__
 **/
 		my.Text.prototype.type = 'Text';
 		my.Text.prototype.classname = 'textnames';
-		my.work.d.Text = {
+		my.Text.prototype.defs = {
 			/**
 Text to be displayed
 @property text
@@ -1024,7 +1007,13 @@ Glyph widths array
 **/
 			glyphWidths: [],
 		};
-		my.mergeInto(my.work.d.Text, my.work.d.Base);
+		my.mergeInto(my.Text.prototype.defs, my.Base.prototype.defs);
+		my.Text.prototype.getters = {};
+		my.mergeInto(my.Text.prototype.getters, my.Base.prototype.getters);
+		my.Text.prototype.setters = {};
+		my.mergeInto(my.Text.prototype.setters, my.Base.prototype.setters);
+		my.Text.prototype.deltaSetters = {};
+		my.mergeInto(my.Text.prototype.deltaSetters, my.Base.prototype.deltaSetters);
 		/**
 Stamp function - stamp phrases, words or individual glyphs (letters and spaces) along a Shape entity path
 

@@ -11,6 +11,7 @@ var mycode = function() {
 	var myWidth = window.innerWidth - 50,
 		myHeight = window.innerHeight - 150;
 
+console.log(typeof window.innerWidth, window.innerWidth, myWidth);
 	//manipulate variables
 	myWidth = (myWidth > 100) ? myWidth : 100;
 	myHeight = (myHeight > 100) ? myHeight : 100;

@@ -31,6 +31,23 @@ Currently known bugs
 
 CHANGE LOG
 ------------------------------------------------------------------------------------
+to 170204
+	- refactoring
+		- removed scrawl.work.d and rewritten .get functionality
+			- breaks the 5xx load/save functionality (which is a good thing)
+		- running various tests in browsers to see where other code bottlenecks may lie ...
+	- bunny tests (no of bunnies that can be animated at 20fps) ...
+		- Chrome:   031a - 2740, 032a - 3850, 033a -  4600
+		- IE11:     031a - 2160, 032a - 4550, 033a -  7700
+		- Edge:     031a - 2220, 032a - 4800, 033a -  8600
+		- Firefox:  031a - 4680, 032a - 8200, 033a - 18100
+	- starfield tests (no of stars that can be animated at ~ 20fps) ...
+		- Edge:     220 - 100(11fps), 221 -  400(16fps), 119 - 1700(19fps)
+		- IE11:     220 - 100(14fps), 221 -  400(17fps), 119 - 1700(18fps)
+		- Firefox:  220 - 100(18fps), 221 -  500(17fps), 119 - 3000(19fps)
+		- Chrome:   220 - 300(15fps), 221 - 1400(18fps), 119 - 3900(19fps)
+
+
 170129
 	- refactoring color extension
 		- codebase too large

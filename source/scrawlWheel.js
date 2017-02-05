@@ -93,10 +93,9 @@ Work vector, for wheel-specific calculations
 **/
 		my.Wheel = function Wheel(items) {
 			var get = my.xtGet,
-			d = my.work.d.Wheel;
+			d = my.Wheel.prototype.defs;
 			items = my.safeObject(items);
 			my.Entity.call(this, items);
-			my.Position.prototype.set.call(this, items);
 			/**
 Circle radius - can be an absolute Numbewr value, or a percentage String value (relative to the Cell's width)
 @property radius
@@ -111,6 +110,8 @@ Circle radius - can be an absolute Numbewr value, or a percentage String value (
 			this.checkHitRadius = get(items.checkHitRadius, 0);
 			this.localCheckHitRadius = this.setRadius(this.checkHitRadius);
 			this.closed = get(items.closed, d.closed);
+			this.startAngle = get(items.startAngle, d.startAngle);
+			this.endAngle = get(items.endAngle, d.endAngle);
 			this.includeCenter = get(items.includeCenter, d.includeCenter);
 			this.clockwise = get(items.clockwise, d.clockwise);
 			this.registerInLibrary();
@@ -126,7 +127,7 @@ Circle radius - can be an absolute Numbewr value, or a percentage String value (
 **/
 		my.Wheel.prototype.type = 'Wheel';
 		my.Wheel.prototype.classname = 'entitynames';
-		my.work.d.Wheel = {
+		my.Wheel.prototype.defs = {
 			/**
 Angle of the path's start point, from due east, in degrees
 @property startAngle
@@ -195,29 +196,43 @@ Collision calculation value - collision radius, from start vector
 **/
 			localCheckHitRadius: 0
 		};
-		my.mergeInto(my.work.d.Wheel, my.work.d.Entity);
-
-		/**
-Augments Entity.set()
-@method set
-@param {Object} items Object consisting of key:value attributes
-@return This
-@chainable
-**/
-		my.Wheel.prototype.set = function(items) {
-			var xt = my.xt;
-			my.Entity.prototype.set.call(this, items);
-			if (xt(items.radius)) {
-				this.radius = items.radius;
+		my.mergeInto(my.Wheel.prototype.defs, my.Entity.prototype.defs);
+		my.Wheel.prototype.getters = {};
+		my.mergeInto(my.Wheel.prototype.getters, my.Entity.prototype.getters);
+		my.Wheel.prototype.setters = {
+			radius: function(item){
+				this.radius = item;
 				this.localRadius = this.setRadius(this.radius);
-				// this.width = this.localRadius * 2;
-				// this.height = this.width;
-			}
-			if (xt(items.checkHitRadius)) {
+			},
+			checkHitRadius: function(item){
+				this.checkHitRadius = item;
 				this.localCheckHitRadius = this.setRadius(this.checkHitRadius);
-			}
-			return this;
+			},
 		};
+		my.mergeInto(my.Wheel.prototype.setters, my.Entity.prototype.setters);
+		my.Wheel.prototype.deltaSetters = {
+			radius: function(item){
+				var n = this.radius;
+				if(item.substring || n.substring){
+					this.radius = parseFloat(n) + parseFloat(item) + '%';
+				}
+				else{
+					this.radius += item;
+				}
+				this.localRadius += this.setRadius(this.radius);
+			},
+			checkHitRadius: function(item){
+				var n = this.checkHitRadius;
+				if(item.substring || n.substring){
+					this.checkHitRadius = parseFloat(n) + parseFloat(item) + '%';
+				}
+				else{
+					this.checkHitRadius += item;
+				}
+				this.localCheckHitRadius += this.setRadius(this.checkHitRadius);
+			}
+		};
+		my.mergeInto(my.Wheel.prototype.deltaSetters, my.Entity.prototype.deltaSetters);
 		/**
 set helper function
 @method setRadius
@@ -243,42 +258,6 @@ get the current radius value, in pixels
 **/
 		my.Wheel.prototype.getRadius = function(item) {
 			return this.localRadius;
-		};
-		/**
-Augments Entity.setDelta()
-@method setDelta
-@param {Object} items Object consisting of key:value attributes
-@return This
-@chainable
-**/
-		my.Wheel.prototype.setDelta = function(items) {
-			var xt = my.xt,
-				r;
-			my.Entity.prototype.setDelta.call(this, items);
-			items = my.safeObject(items);
-			if (xt(items.radius)) {
-				r = this.setRadius(items.radius);
-				if (items.radius.substring) {
-					this.radius = my.addPercentages(this.radius, items.radius);
-				}
-				this.localRadius += r;
-				// this.width = this.localRadius * 2;
-				// this.height = this.width;
-			}
-			if (xt(items.checkHitRadius)) {
-				r = this.setRadius(items.checkHitRadius);
-				if (items.checkHitRadius.substring) {
-					this.checkHitRadius = my.addPercentages(this.checkHitRadius, items.checkHitRadius);
-				}
-				this.localCheckHitRadius += r;
-			}
-			if (xt(items.startAngle)) {
-				this.startAngle = this.get('startAngle') + items.startAngle;
-			}
-			if (xt(items.endAngle)) {
-				this.endAngle = this.get('endAngle') + items.endAngle;
-			}
-			return this;
 		};
 		/**
 Check a set of coordinates to see if any of them fall within this entity's path - uses JavaScript's _isPointInPath_ function

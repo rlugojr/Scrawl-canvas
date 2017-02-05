@@ -379,7 +379,6 @@ The argument object should include the following attributes:
 						parentElement: stackParent
 					});
 				}
-				//items.stack = myStk.name;
 				items.group = myStk.name;
 				items.parentElement = myStk.name;
 			}
@@ -507,7 +506,6 @@ A __display__ function to ask Pads to undertake a complete clear-compile-show di
 		my.render = function(pads, mouse) {
 			var i,
 				iz,
-				// p,
 				padnames,
 				pad = my.pad;
 			my.renderElements();
@@ -599,7 +597,7 @@ True if the CSS2 3d functionality is supported; false otherwise
 @type Boolean
 @default false
 **/
-		my.work.d.Device.transform = false;
+		my.Device.prototype.defs.transform = false;
 
 		/**
 Check if device supports CSS3 3d transforms
@@ -610,7 +608,6 @@ Check if device supports CSS3 3d transforms
 			var c = document.createElement('div');
 			this.transform = my.xto(c.style.webkitPerspectiveOrigin, c.style.mozPerspectiveOrigin, c.style.msPerspectiveOrigin, c.style.perspectiveOrigin);
 		};
-
 		/**
 The coordinate Vector representing the object's rotation/flip point
 
@@ -628,7 +625,7 @@ Where values are Numbers, handle can be treated like any other Vector
 @property PageElement.start
 @type Vector
 **/
-		my.work.d.PageElement.start = {
+		my.PageElement.prototype.defs.start = {
 			x: 0,
 			y: 0,
 			z: 0
@@ -644,7 +641,7 @@ PageElement, and all Objects that prototype chain to PageElement, supports the f
 @property PageElement.delta
 @type Vector
 **/
-		my.work.d.PageElement.delta = {
+		my.PageElement.prototype.defs.delta = {
 			x: 0,
 			y: 0,
 			z: 0
@@ -661,7 +658,7 @@ PageElement, and all Objects that prototype chain to PageElement, supports the f
 @property PageElement.translate
 @type Vector
 **/
-		my.work.d.PageElement.translate = {
+		my.PageElement.prototype.defs.translate = {
 			x: 0,
 			y: 0,
 			z: 0
@@ -670,7 +667,7 @@ PageElement, and all Objects that prototype chain to PageElement, supports the f
 @property PageElement.deltaTranslate
 @type Vector
 **/
-		my.work.d.PageElement.deltaTranslate = {
+		my.PageElement.prototype.defs.deltaTranslate = {
 			x: 0,
 			y: 0,
 			z: 0
@@ -688,7 +685,7 @@ Where values are Numbers, handle can be treated like any other Vector
 @property PageElement.handle
 @type Object
 **/
-		my.work.d.PageElement.handle = {
+		my.PageElement.prototype.defs.handle = {
 			x: 'center',
 			y: 'center',
 			z: 0
@@ -699,56 +696,56 @@ The ENTITYNAME or POINTNAME of a entity or Point object to be used for setting t
 @type String
 @default ''
 **/
-		my.work.d.PageElement.pivot = '';
+		my.PageElement.prototype.defs.pivot = '';
 		/**
 The element's current ELEMENTGROUPNAME
 @property PageElement.group
 @type String
 @default ''
 **/
-		my.work.d.PageElement.group = '';
+		my.PageElement.prototype.defs.group = '';
 		/**
 The SPRITENAME of a Shape entity whose path is used to calculate this object's start point
 @property PageElement.path
 @type String
 @default ''
 **/
-		my.work.d.PageElement.path = '';
+		my.PageElement.prototype.defs.path = '';
 		/**
 A value between 0 and 1 to represent the distance along a Shape object's path, where 0 is the path start and 1 is the path end
 @property PageElement.pathPlace
 @type Number
 @default 0
 **/
-		my.work.d.PageElement.pathPlace = 0;
+		my.PageElement.prototype.defs.pathPlace = 0;
 		/**
 A change value which can be applied to the object's pathPlace attribute
 @property PageElement.deltaPathPlace
 @type Number
 @default 0
 **/
-		my.work.d.PageElement.deltaPathPlace = 0;
+		my.PageElement.prototype.defs.deltaPathPlace = 0;
 		/**
 A flag to determine whether the object will calculate its position along a Shape path in a regular (true), or simple (false), manner
 @property PageElement.pathSpeedConstant
 @type Boolean
 @default true
 **/
-		my.work.d.PageElement.pathSpeedConstant = true;
+		my.PageElement.prototype.defs.pathSpeedConstant = true;
 		/**
 The rotation value (in degrees) of an object's current position along a Shape path
 @property PageElement.pathRoll
 @type Number
 @default 0
 **/
-		my.work.d.PageElement.pathRoll = 0;
+		my.PageElement.prototype.defs.pathRoll = 0;
 		/**
 A flag to determine whether the object will calculate the rotation value of its current position along a Shape path
 @property PageElement.addPathRoll
 @type Boolean
 @default false
 **/
-		my.work.d.PageElement.addPathRoll = false;
+		my.PageElement.prototype.defs.addPathRoll = false;
 		/**
 When element is pivoted to another element, determines placement in relation to that element
 
@@ -757,70 +754,70 @@ Permitted values: 'top', 'right', 'bottom', 'left', '' (default)
 @type String
 @default ''
 **/
-		my.work.d.PageElement.lockTo = '';
+		my.PageElement.prototype.defs.lockTo = '';
 		/**
 When true, element ignores horizontal placement data via pivot and path attributes
 @property PageElement.lockX
 @type Boolean
 @default false
 **/
-		my.work.d.PageElement.lockX = false;
+		my.PageElement.prototype.defs.lockX = false;
 		/**
 When true, element ignores vertical placement data via pivot and path attributes
 @property PageElement.lockY
 @type Boolean
 @default false
 **/
-		my.work.d.PageElement.lockY = false;
+		my.PageElement.prototype.defs.lockY = false;
 		/**
 Element 2d roll value
 @property PageElement.roll
 @type Number
 @default 0
 **/
-		my.work.d.PageElement.roll = 0;
+		my.PageElement.prototype.defs.roll = 0;
 		/**
 Element 2d pitch value
 @property PageElement.pitch
 @type Number
 @default 0
 **/
-		my.work.d.PageElement.pitch = 0;
+		my.PageElement.prototype.defs.pitch = 0;
 		/**
 Element 2d yaw value
 @property PageElement.yaw
 @type Number
 @default 0
 **/
-		my.work.d.PageElement.yaw = 0;
+		my.PageElement.prototype.defs.yaw = 0;
 		/**
 Element 2d deltaRoll value
 @property PageElement.deltaRoll
 @type Number
 @default 0
 **/
-		my.work.d.PageElement.deltaRoll = 0;
+		my.PageElement.prototype.defs.deltaRoll = 0;
 		/**
 Element 2d deltaPitch value
 @property PageElement.deltaPitch
 @type Number
 @default 0
 **/
-		my.work.d.PageElement.deltaPitch = 0;
+		my.PageElement.prototype.defs.deltaPitch = 0;
 		/**
 Element 2d deltaYaw value
 @property PageElement.deltaYaw
 @type Number
 @default 0
 **/
-		my.work.d.PageElement.deltaYaw = 0;
+		my.PageElement.prototype.defs.deltaYaw = 0;
 		/**
 Element rotation around its transform (start) coordinate
 @property PageElement.rotation
 @type Quaternion
 @default Unit quaternion with no rotation
 **/
-		my.work.d.PageElement.rotation = {
+		my.PageElement.prototype.defs.rotation = {
 			n: 1,
 			v: {
 				x: 0,
@@ -834,7 +831,7 @@ Element's delta (change in) rotation around its transform (start) coordinate
 @type Quaternion
 @default Unit quaternion with no rotation
 **/
-		my.work.d.PageElement.deltaRotation = {
+		my.PageElement.prototype.defs.deltaRotation = {
 			n: 1,
 			v: {
 				x: 0,
@@ -848,28 +845,28 @@ Element's rotation tolerance - all Quaternions need to be unit quaternions; this
 @type Number
 @default 0.001
 **/
-		my.work.d.PageElement.rotationTolerance = 0.001;
+		my.PageElement.prototype.defs.rotationTolerance = 0.001;
 		/**
 A flag to determine whether an element displays itself
 @property PageElement.visibility
 @type Boolean
 @default true
 **/
-		my.work.d.PageElement.visibility = true;
+		my.PageElement.prototype.defs.visibility = true;
 		/**
 A flag to determine whether zIndex uses translateZ values (default: true), or if it can be independently set (as style zIndex)
 @property PageElement.zIndexIsTranslateZ
 @type Boolean
 @default true
 **/
-		my.work.d.PageElement.zIndexIsTranslateZ = true;
+		my.PageElement.prototype.defs.zIndexIsTranslateZ = true;
 		/**
 A flag to determine whether an element uses the browser viewport for its position and dimensions reference
 @property PageElement.viewport
 @type Boolean
 @default false
 **/
-		my.work.d.PageElement.viewport = false;
+		my.PageElement.prototype.defs.viewport = false;
 		/**
 A flag to tell scrawl-canvas to add corner trackers to the element
 
@@ -878,63 +875,63 @@ Corner trackers can be used by the Frame entity to bind its corners to a DOM ele
 @type Boolean
 @default false
 **/
-		my.work.d.PageElement.includeCornerTrackers = false;
+		my.PageElement.prototype.defs.includeCornerTrackers = false;
 		/**
 Corner tracker vector - used only with Frame emtitys
 @property PageElement.topLeft
 @type Vector
 @default false
 **/
-		my.work.d.PageElement.topLeft = false;
+		my.PageElement.prototype.defs.topLeft = false;
 		/**
 Corner tracker vector - used only with Frame emtitys
 @property PageElement.topRight
 @type Vector
 @default false
 **/
-		my.work.d.PageElement.topRight = false;
+		my.PageElement.prototype.defs.topRight = false;
 		/**
 Corner tracker vector - used only with Frame emtitys
 @property PageElement.bottomRight
 @type Vector
 @default false
 **/
-		my.work.d.PageElement.bottomRight = false;
+		my.PageElement.prototype.defs.bottomRight = false;
 		/**
 Corner tracker vector - used only with Frame emtitys
 @property PageElement.bottomLeft
 @type Vector
 @default false
 **/
-		my.work.d.PageElement.bottomLeft = false;
+		my.PageElement.prototype.defs.bottomLeft = false;
 		/**
 Corner tracker div element - used only with Frame entitys
 @property PageElement.topLeftDiv
 @type DOM element object
 @default false
 **/
-		my.work.d.PageElement.topLeftDiv = false;
+		my.PageElement.prototype.defs.topLeftDiv = false;
 		/**
 Corner tracker div element - used only with Frame entitys
 @property PageElement.topRightDiv
 @type DOM element object
 @default false
 **/
-		my.work.d.PageElement.topRightDiv = false;
+		my.PageElement.prototype.defs.topRightDiv = false;
 		/**
 Corner tracker div element - used only with Frame entitys
 @property PageElement.bottomRightDiv
 @type DOM element object
 @default false
 **/
-		my.work.d.PageElement.bottomRightDiv = false;
+		my.PageElement.prototype.defs.bottomRightDiv = false;
 		/**
 Corner tracker div element - used only with Frame entitys
 @property PageElement.bottomLeftDiv
 @type DOM element object
 @default false
 **/
-		my.work.d.PageElement.bottomLeftDiv = false;
+		my.PageElement.prototype.defs.bottomLeftDiv = false;
 		/**
 Index of mouse vector to use when pivot === 'mouse'
 
@@ -943,22 +940,35 @@ The Pad/Stack/Element.mice object can hold details of multiple touch events - wh
 @type String
 @default 'mouse'
 **/
-		my.work.d.PageElement.mouseIndex = 'mouse';
+		my.PageElement.prototype.defs.mouseIndex = 'mouse';
 		/**
 Sorting order - must be a positive integer
 @property order
 @type Number
 @default 0
 **/
-		my.work.d.PageElement.order = 0;
+		my.PageElement.prototype.defs.order = 0;
 		/**
 Drag boolean - indicates the element can be manipulated via mouse/touch events (eg pickup, drop)
 @property drag
 @type Boolean
 @default false
 **/
-		my.work.d.PageElement.drag = false;
-		my.mergeInto(my.work.d.Pad, my.work.d.PageElement);
+		my.PageElement.prototype.defs.drag = false;
+		my.mergeInto(my.Pad.prototype.defs, my.PageElement.prototype.defs);
+
+
+
+
+
+
+
+
+
+
+
+
+
 		/**
 PageElement constructor hook function - modified by stacks module
 @method stacksPageElementConstructor
@@ -970,7 +980,7 @@ PageElement constructor hook function - modified by stacks module
 				vec = my.makeVector,
 				get = my.xtGet,
 				quat = my.makeQuaternion,
-				d = my.work.d[this.type];
+				d = my[this.type].prototype.defs;
 
 			this.start = vec({
 				name: this.type + '.' + this.name + '.start',
@@ -1156,63 +1166,61 @@ Augments Base.get() to retrieve DOM element width and height values, and stack-r
 @return Attribute value
 **/
 		my.PageElement.prototype.get = function(item) {
-			var stat1 = ['width', 'height'],
-				stat2 = ['startX', 'startY', 'handleX', 'handleY', 'deltaX', 'deltaY', 'translateX', 'translateY', 'translateZ', 'deltaTranslateX', 'deltaTranslateY', 'deltaTranslateZ'],
-				el,
-				cont = my.contains;
-			el = this.getElement();
-			if (cont(stat1, item)) {
-				switch (this.type) {
-					case 'Pad':
-						if ('width' === item) {
-							return this.localWidth || this.width || parseFloat(el.width) || my.work.d[this.type].width;
-						}
-						if ('height' === item) {
-							return this.localHeight || this.height || parseFloat(el.height) || my.work.d[this.type].height;
-						}
-						break;
-					default:
-						if ('width' === item) {
-							return this.localWidth || this.width || parseFloat(el.style.width) || parseFloat(el.clientWidth) || my.work.d[this.type].width;
-						}
-						if ('height' === item) {
-							return this.localHeight || this.height || parseFloat(el.style.height) || parseFloat(el.clientHeight) || my.work.d[this.type].height;
-						}
+			var undef,
+				g = this.getters[item],
+				d, i, s,
+				e = this.getElement();
+			if (g) {
+				return g(e);
+			}
+			else{
+				d = this.defs[item];
+				if (typeof d !== 'undefined') {
+					i = this[item];
+					return (typeof i !== 'undefined') ? i : d;
+				}
+				else {
+					s = el.style[item];
+					return (typeof s !== 'undefined') ? s : undef;
 				}
 			}
-			if (cont(stat2, item)) {
-				switch (item) {
-					case 'startX':
-						return this.start.x;
-					case 'startY':
-						return this.start.y;
-					case 'handleX':
-						return this.handle.x;
-					case 'handleY':
-						return this.handle.y;
-					case 'deltaX':
-						return this.delta.x;
-					case 'deltaY':
-						return this.delta.y;
-					case 'translateX':
-						return this.translate.x;
-					case 'translateY':
-						return this.translate.y;
-					case 'translateZ':
-						return this.translate.z;
-					case 'deltaTranslateX':
-						return this.deltaTranslate.x;
-					case 'deltaTranslateY':
-						return this.deltaTranslate.y;
-					case 'deltaTranslateZ':
-						return this.deltaTranslate.z;
-				}
-			}
-
-			if (my.xt(el.style[item])) {
-				return el.style[item];
-			}
-			return my.Base.prototype.get.call(this, item);
+		};
+		my.PageElement.prototype.getters.width = function(e){
+			return this.localWidth || this.width || parseFloat(e.style.width) || parseFloat(e.clientWidth) || this.defs.width;
+		};
+		my.PageElement.prototype.getters.height = function(e){
+			return this.localHeight || this.height || parseFloat(e.style.height) || parseFloat(e.clientHeight) || this.defs.height;
+		};
+		my.PageElement.prototype.getters.deltaX = function(e){
+			return this.delta.x;
+		};
+		my.PageElement.prototype.getters.deltaY = function(e){
+			return this.delta.y;
+		};
+		my.PageElement.prototype.getters.translateX = function(e){
+			return this.translate.x;
+		};
+		my.PageElement.prototype.getters.translateY = function(e){
+			return this.translate.y;
+		};
+		my.PageElement.prototype.getters.translateZ = function(e){
+			return this.translate.z;
+		};
+		my.PageElement.prototype.getters.deltaTranslateX = function(e){
+			return this.deltaTranslate.x;
+		};
+		my.PageElement.prototype.getters.deltaTranslateY = function(e){
+			return this.deltaTranslate.y;
+		};
+		my.PageElement.prototype.getters.deltaTranslateZ = function(e){
+			return this.deltaTranslate.z;
+		};
+		my.mergeInto(my.Pad.prototype.getters, my.PageElement.prototype.getters);
+		my.Pad.prototype.getters.width = function(e){
+			return this.localWidth || this.width || parseFloat(el.width) || this.defs.width;
+		};
+		my.Pad.prototype.getters.height = function(e){
+			return this.localHeight || this.height || parseFloat(el.height) || this.defs.height;
 		};
 		/**
 Augments Base.set() to allow the setting of DOM element dimension values, and stack-related attributes (start, startX, startY, handle, handleX, handleY, delta, deltaX, deltaY, translate, translateX, translateY, 'translateZ, deltaTranslate, deltaTranslateX, deltaTranslateY, deltaTranslateZ). Can also be used to set a number of current CSS attributes on the DOM element
@@ -1904,7 +1912,7 @@ Argument can contain the following (optional) attributes:
 				translate.rotate3d(items.quaternion, items.distance);
 			}
 			else {
-				//opposite to above; rotation is the world rotation, deltaRotation the local rotation to be applied
+				// opposite to above; rotation is the world rotation, deltaRotation the local rotation to be applied
 				rotation.quaternionRotate(this.deltaRotation);
 				translate.vectorAdd(this.deltaTranslate);
 			}
@@ -2434,7 +2442,7 @@ Reinitialize element with existing values
 		my.PageElement.prototype.domInitialize = function() {
 			var start = this.start,
 				handle = this.handle,
-				d = my.work.d[this.type];
+				d = my[this.type].prototype.defs;
 			this.set({
 				startX: start.x || 0,
 				startY: start.y || 0,
@@ -2662,8 +2670,8 @@ Stamp helper hook function - amended by stacks module
 				get = my.xtGet;
 			items = my.safeObject(items);
 			if (my.xt(items.stackElement)) {
-				items.width = get(items.width, items.stackElement.style.width, my.work.d.Stack.width);
-				items.height = get(items.height, items.stackElement.style.height, my.work.d.Stack.height);
+				items.width = get(items.width, items.stackElement.style.width, my.Stack.prototype.defs.width);
+				items.height = get(items.height, items.stackElement.style.height, my.Stack.prototype.defs.height);
 				items.name = get(items.stackName, items.name, items.stackElement.id, items.stackElement.name, 'Stack');
 				my.PageElement.call(this, items);
 				if (this.name.match(/~~~/)) {
@@ -2725,7 +2733,7 @@ Stamp helper hook function - amended by stacks module
 **/
 		my.Stack.prototype.type = 'Stack';
 		my.Stack.prototype.classname = 'stacknames';
-		my.work.d.Stack = {
+		my.Stack.prototype.defs = {
 			/**
 An Object (in fact, a Vector) containing perspective details for the stack element. 
 
@@ -2764,7 +2772,9 @@ Groups array
 **/
 			groups: []
 		};
-		my.mergeInto(my.work.d.Stack, my.work.d.PageElement);
+		my.mergeInto(my.Stack.prototype.defs, my.PageElement.prototype.defs);
+		my.Stack.prototype.getters = {};
+		my.mergeInto(my.Stack.prototype.getters, my.PageElement.prototype.getters);
 		/**
 Return the DOM element wrapped by this object
 @method getElement
@@ -3115,7 +3125,6 @@ setCurrentPerspective helper function
 				conv = this.numberConvert;
 			current.x = (given.x.substring) ? conv(given.x, this.localWidth) : given.x;
 			current.y = (given.y.substring) ? conv(given.y, this.localHeight) : given.y;
-			// this next line is wrong - need to work out how to scale perspective depth effectively
 			current.z = given.z;
 			current.flag = true;
 			return this;
@@ -3161,8 +3170,8 @@ Get dimensions of Stack
 			style;
 			items = my.safeObject(items);
 			if (my.xt(items.domElement)) {
-				items.width = get(items.width, items.domElement.style.width, my.work.d.Stack.width);
-				items.height = get(items.height, items.domElement.style.height, my.work.d.Stack.height);
+				items.width = get(items.width, items.domElement.style.width, my.Element.prototype.defs.width);
+				items.height = get(items.height, items.domElement.style.height, my.Element.prototype.defs.height);
 				items.name = get(items.elementName, items.name, items.domElement.id, items.domElement.name, 'Element');
 				my.PageElement.call(this, items);
 				if (this.name.match(/~~~/)) {
@@ -3200,7 +3209,7 @@ Get dimensions of Stack
 **/
 		my.Element.prototype.type = 'Element';
 		my.Element.prototype.classname = 'elementnames';
-		my.work.d.Element = {
+		my.Element.prototype.defs = {
 			/**
 Element's default height
 @property height
@@ -3209,7 +3218,9 @@ Element's default height
 **/
 			height: 'auto'
 		};
-		my.mergeInto(my.work.d.Element, my.work.d.PageElement);
+		my.mergeInto(my.Element.prototype.defs, my.PageElement.prototype.defs);
+		my.Element.prototype.getters = {};
+		my.mergeInto(my.Element.prototype.getters, my.Base.prototype.getters);
 		/**
 Return the DOM element wrapped by this object
 @method getElement
@@ -3271,7 +3282,7 @@ Return the DOM element wrapped by this object
 **/
 		my.ElementGroup.prototype.type = 'ElementGroup';
 		my.ElementGroup.prototype.classname = 'groupnames';
-		my.work.d.ElementGroup = {
+		my.ElementGroup.prototype.defs = {
 			/**
 Array of SPRITENAME Strings of entitys that complement this ElementGroup
 @property entitys
@@ -3329,7 +3340,9 @@ STACKNAME of the default Stack object to which this group is associated
 **/
 			stack: ''
 		};
-		my.mergeInto(my.work.d.ElementGroup, my.work.d.Base);
+		my.mergeInto(my.ElementGroup.prototype.defs, my.Base.prototype.defs);
+		my.ElementGroup.prototype.getters = {};
+		my.mergeInto(my.ElementGroup.prototype.getters, my.Base.prototype.getters);
 
 		/**
 Directly calls the equivalent Group function

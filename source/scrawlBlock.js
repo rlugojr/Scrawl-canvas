@@ -88,10 +88,9 @@ A __factory__ function to generate new Block entitys
 **/
 		my.Block = function Block(items) {
 			var get = my.xtGet,
-			d = my.work.d.Block;
+			d = my.Block.prototype.defs;
 			items = my.safeObject(items);
 			my.Entity.call(this, items);
-			my.Position.prototype.set.call(this, items);
 			this.width = get(items.width, d.width);
 			this.height = get(items.height, d.height);
 			this.setLocalDimensions();
@@ -108,7 +107,7 @@ A __factory__ function to generate new Block entitys
 **/
 		my.Block.prototype.type = 'Block';
 		my.Block.prototype.classname = 'entitynames';
-		my.work.d.Block = {
+		my.Block.prototype.defs = {
 			/**
 Block display - width, in pixels
 @property localWidth
@@ -126,35 +125,26 @@ Block display - height, in pixels
 **/
 			localHeight: 0,
 		};
-		my.mergeInto(my.work.d.Block, my.work.d.Entity);
-		/**
-Augments Entity.set()
-@method set
-@param {Object} items Object consisting of key:value attributes
-@return This
-@chainable
-**/
-		my.Block.prototype.set = function(items) {
-			my.Entity.prototype.set.call(this, items);
-			if (my.xto(items.width, items.height, items.scale)) {
-				this.setLocalDimensions();
-			}
-			return this;
+		my.mergeInto(my.Block.prototype.defs, my.Entity.prototype.defs);
+		my.Block.prototype.getters = {};
+		my.mergeInto(my.Block.prototype.getters, my.Entity.prototype.getters);
+		my.Block.prototype.setters = {
+			width: function(item){
+				my.Entity.prototype.setters.width(item);
+				this.setLocalDimensionsFlag = true;
+			},
+			height: function(item){
+				my.Entity.prototype.setters.height(item);
+				this.setLocalDimensionsFlag = true;
+			},
+			scale: function(item){
+				my.Entity.prototype.setters.scale(item);
+				this.setLocalDimensionsFlag = true;
+			},
 		};
-		/**
-Augments Entity.set()
-@method setDelta
-@param {Object} items Object consisting of key:value attributes
-@return This
-@chainable
-**/
-		my.Block.prototype.setDelta = function(items) {
-			my.Entity.prototype.setDelta.call(this, items);
-			if (my.xto(items.width, items.height, items.scale)) {
-				this.setLocalDimensions();
-			}
-			return this;
-		};
+		my.mergeInto(my.Block.prototype.setters, my.Entity.prototype.setters);
+		my.Block.prototype.deltaSetters = {};
+		my.mergeInto(my.Block.prototype.deltaSetters, my.Entity.prototype.deltaSetters);
 		/**
 Augments Entity.set() - sets the local dimensions
 @method setLocalDimensions
@@ -163,6 +153,7 @@ Augments Entity.set() - sets the local dimensions
 **/
 		my.Block.prototype.setLocalDimensions = function() {
 			var cell = my.cell[my.group[this.group].cell];
+			this.setLocalDimensionsFlag = false;
 			if (this.width.substring) {
 				this.localWidth = (parseFloat(this.width) / 100) * cell.actualWidth * this.scale;
 			}
@@ -188,6 +179,9 @@ Stamp helper function - perform a 'clip' method draw
 **/
 		my.Block.prototype.clip = function(ctx, cellname, cell) {
 			var here = this.currentHandle;
+			if(this.setLocalDimensionsFlag){
+				this.setLocalDimensions();
+			}
 			this.rotateCell(ctx, cell);
 			ctx.beginPath();
 			ctx.rect(here.x, here.y, this.localWidth, this.localHeight);
@@ -205,6 +199,9 @@ Stamp helper function - perform a 'clear' method draw
 **/
 		my.Block.prototype.clear = function(ctx, cellname, cell) {
 			var here = this.currentHandle;
+			if(this.setLocalDimensionsFlag){
+				this.setLocalDimensions();
+			}
 			cell.setToClearShape();
 			this.rotateCell(ctx, cell);
 			ctx.clearRect(here.x, here.y, this.localWidth, this.localHeight);
@@ -226,6 +223,9 @@ Stamp helper function - perform a 'clearWithBackground' method draw
 				strokeStyle = myCellCtx.get('strokeStyle'),
 				globalAlpha = myCellCtx.get('globalAlpha'),
 				here = this.currentHandle;
+			if(this.setLocalDimensionsFlag){
+				this.setLocalDimensions();
+			}
 			this.rotateCell(ctx, cell);
 			ctx.fillStyle = bg;
 			ctx.strokeStyle = bg;
@@ -248,6 +248,9 @@ Stamp helper function - perform a 'draw' method draw
 **/
 		my.Block.prototype.draw = function(ctx, cellname, cell) {
 			var here = this.currentHandle;
+			if(this.setLocalDimensionsFlag){
+				this.setLocalDimensions();
+			}
 			cell.setEngine(this);
 			this.rotateCell(ctx, cell);
 			ctx.strokeRect(here.x, here.y, this.localWidth, this.localHeight);
@@ -264,6 +267,9 @@ Stamp helper function - perform a 'fill' method draw
 **/
 		my.Block.prototype.fill = function(ctx, cellname, cell) {
 			var here = this.currentHandle;
+			if(this.setLocalDimensionsFlag){
+				this.setLocalDimensions();
+			}
 			cell.setEngine(this);
 			this.rotateCell(ctx, cell);
 			ctx.fillRect(here.x, here.y, this.localWidth, this.localHeight);
@@ -280,6 +286,9 @@ Stamp helper function - perform a 'drawFill' method draw
 **/
 		my.Block.prototype.drawFill = function(ctx, cellname, cell) {
 			var here = this.currentHandle;
+			if(this.setLocalDimensionsFlag){
+				this.setLocalDimensions();
+			}
 			cell.setEngine(this);
 			this.rotateCell(ctx, cell);
 			ctx.strokeRect(here.x, here.y, this.localWidth, this.localHeight);
@@ -298,6 +307,9 @@ Stamp helper function - perform a 'fillDraw' method draw
 **/
 		my.Block.prototype.fillDraw = function(ctx, cellname, cell) {
 			var here = this.currentHandle;
+			if(this.setLocalDimensionsFlag){
+				this.setLocalDimensions();
+			}
 			cell.setEngine(this);
 			this.rotateCell(ctx, cell);
 			ctx.fillRect(here.x, here.y, this.localWidth, this.localHeight);
@@ -316,6 +328,9 @@ Stamp helper function - perform a 'sinkInto' method draw
 **/
 		my.Block.prototype.sinkInto = function(ctx, cellname, cell) {
 			var here = this.currentHandle;
+			if(this.setLocalDimensionsFlag){
+				this.setLocalDimensions();
+			}
 			cell.setEngine(this);
 			this.rotateCell(ctx, cell);
 			ctx.fillRect(here.x, here.y, this.localWidth, this.localHeight);
@@ -333,6 +348,9 @@ Stamp helper function - perform a 'floatOver' method draw
 **/
 		my.Block.prototype.floatOver = function(ctx, cellname, cell) {
 			var here = this.currentHandle;
+			if(this.setLocalDimensionsFlag){
+				this.setLocalDimensions();
+			}
 			cell.setEngine(this);
 			this.rotateCell(ctx, cell);
 			ctx.strokeRect(here.x, here.y, this.localWidth, this.localHeight);
@@ -349,6 +367,9 @@ Stamp helper function - perform a 'none' method draw
 @private
 **/
 		my.Block.prototype.none = function(ctx, cellname, cell) {
+			if(this.setLocalDimensionsFlag){
+				this.setLocalDimensions();
+			}
 			return this;
 		};
 

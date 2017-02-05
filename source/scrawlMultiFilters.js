@@ -96,24 +96,24 @@ MULTIFILTERNAME String, to be applied to this entity
 @type String
 @default ''
 **/
-		my.work.d.Entity.multiFilter = '';
-		if (my.xt(my.work.d.Block)) {
-			my.mergeInto(my.work.d.Block, my.work.d.Entity);
+		my.Entity.prototype.defs.multiFilter = '';
+		if (my.Block) {
+			my.mergeInto(my.Block.prototype.defs, my.Entity.prototype.defs);
 		}
-		if (my.xt(my.work.d.Shape)) {
-			my.mergeInto(my.work.d.Shape, my.work.d.Entity);
+		if (my.Shape) {
+			my.mergeInto(my.Shape.prototype.defs, my.Entity.prototype.defs);
 		}
-		if (my.xt(my.work.d.Wheel)) {
-			my.mergeInto(my.work.d.Wheel, my.work.d.Entity);
+		if (my.Wheel) {
+			my.mergeInto(my.Wheel.prototype.defs, my.Entity.prototype.defs);
 		}
-		if (my.xt(my.work.d.Picture)) {
-			my.mergeInto(my.work.d.Picture, my.work.d.Entity);
+		if (my.Picture) {
+			my.mergeInto(my.Picture.prototype.defs, my.Entity.prototype.defs);
 		}
-		if (my.xt(my.work.d.Phrase)) {
-			my.mergeInto(my.work.d.Phrase, my.work.d.Entity);
+		if (my.Phrase) {
+			my.mergeInto(my.Phrase.prototype.defs, my.Entity.prototype.defs);
 		}
-		if (my.xt(my.work.d.Path)) {
-			my.mergeInto(my.work.d.Path, my.work.d.Entity);
+		if (my.Path) {
+			my.mergeInto(my.Path.prototype.defs, my.Entity.prototype.defs);
 		}
 		/**
 Group constructor hook function - modified by multiFilter module
@@ -189,10 +189,6 @@ Entity.stamp hook function - modified by multifilters extension
 			engine.globalCompositeOperation = gco;
 		};
 
-		// THIS IS WHERE THE NEW MULTIFILTER CODE WILL START!
-		// ==================================================
-
-
 		/**
 # Filter
 
@@ -256,7 +252,7 @@ Entity.stamp hook function - modified by multifilters extension
 @final
 **/
 		my.Filter.prototype.type = 'Filter';
-		my.work.d.Filter = {
+		my.Filter.prototype.defs = {
 			multiFilter: '',
 			species: '',
 			level: 0,
@@ -288,7 +284,7 @@ Entity.stamp hook function - modified by multifilters extension
 
 
 		my.Filter.prototype.set = function(items) {
-			var d = my.work.d.Filter,
+			var d = this.defs,
 				xt = my.xt;
 			for (var i in items) {
 				if (i === 'ranges') {
@@ -347,8 +343,8 @@ Entity.stamp hook function - modified by multifilters extension
 
 
 		my.Filter.prototype.do = function(data) {
-			if (this.defs[this.species]) {
-				this.defs[this.species].call(this, data);
+			if (this.filterFunctions[this.species]) {
+				this.filterFunctions[this.species].call(this, data);
 			}
 			if (this.action) {
 				this.action(data);
@@ -498,7 +494,7 @@ An object containing pre-defined filter functionality.
 		};
 
 
-		my.Filter.prototype.defs = {
+		my.Filter.prototype.filterFunctions = {
 			default: function(data) {},
 			grayscale: function(data) {
 				var len, posR, posG, posB, posA, gray;
@@ -1016,7 +1012,7 @@ An object containing pre-defined filter functionality.
 **/
 		my.MultiFilter.prototype.type = 'MultiFilter';
 		my.MultiFilter.prototype.classname = 'multifilternames';
-		my.work.d.MultiFilter = {
+		my.MultiFilter.prototype.defs = {
 			/**
 Whether to treat the entity or cell being filtered as a stencil (true) in which case the background behind the stencil is filtered, or just filter the entity itself (the default setting)
 @property stencil
@@ -1064,7 +1060,9 @@ An Array of filter definition Objects - each type of filter definition object mu
 **/
 			filters: []
 		};
-		my.mergeInto(my.work.d.MultiFilter, my.work.d.Base);
+		my.mergeInto(my.MultiFilter.prototype.defs, my.Base.prototype.defs);
+		my.MultiFilter.prototype.getters = {};
+		my.mergeInto(my.MultiFilter.prototype.getters, my.Base.prototype.getters);
 		/**
 multifilter main function:
 - prepare data from my.canvas.defaultHiddenCanvasElement
@@ -1077,12 +1075,9 @@ multifilter main function:
 @return always true
 **/
 		my.MultiFilter.prototype.apply = function(canvas, cvx) {
-			// var canvas, cvx, img, def, filter, buff, data, width, height, j, jz;
 			var img, def, filter, buff, data, width, height, j, jz;
 
 			if (this.filters.length) {
-				// canvas = my.work.cv2;
-				// cvx = my.work.cvx2;
 				width = canvas.width;
 				height = canvas.height;
 
@@ -1258,14 +1253,6 @@ Extract data from the current grid
 
 			return result;
 		};
-
-
-
-
-
-
-		// REMEMBER - CODE BELOW HERE REQUIRED TO COMPLETE THE EXTENSION
-		// =============================================================
 
 		return my;
 	}(scrawl));

@@ -120,7 +120,8 @@ A __factory__ function to generate new Frame entitys
 @final
 **/
 		my.FramePoint.prototype.type = 'FramePoint';
-		my.work.d.FramePoint = {
+		my.FramePoint.prototype.classname = 'framepointnames';
+		my.FramePoint.prototype.defs = {
 			/**
 Frame emtity to which this frame corner belongs
 @property host
@@ -222,16 +223,9 @@ Positioning flag; set to true to ignore path/pivot/mouse changes along the Y axi
 **/
 			lockY: false
 		};
-		my.mergeInto(my.work.d.FramePoint, my.work.d.Base);
-		my.FramePoint.prototype.classname = 'framepointnames';
-		/**
-@method get
-@param {String} item Name of attribute to return
-@return attribute
-**/
-		my.FramePoint.prototype.get = function(item) {
-			return my.Base.get.call(this, items);
-		};
+		my.mergeInto(my.FramePoint.prototype.defs, my.Base.prototype.defs);
+		my.FramePoint.prototype.getters = {};
+		my.mergeInto(my.FramePoint.prototype.getters, my.Base.prototype.getters);
 		/**
 @method set
 @param {Object} items Object consisting of key:value attributes
@@ -473,7 +467,6 @@ setLocal() helper function - position supplied by Path entity
 			this.referencePoint = vec();
 
 			this.source = get(items.source, false);
-			// this.sourceType = false;
 			this.copy = {
 				x: get(items.copyX, 0),
 				y: get(items.copyY, 0),
@@ -538,7 +531,7 @@ setLocal() helper function - position supplied by Path entity
 **/
 		my.Frame.prototype.type = 'Frame';
 		my.Frame.prototype.classname = 'entitynames';
-		my.work.d.Frame = {
+		my.Frame.prototype.defs = {
 			/**
 Current coordinate for top left corner
 @property topLeft
@@ -801,7 +794,6 @@ ASSETNAME or CANVASNAME of source asset used to fill frame
 @default false
 **/
 			source: false,
-			// sourceType: false,
 			/**
 Every Frame entity includes its own personal &lt;canvas&gt; element, which is not part of the DOM and which can only be accessed through this attribute
 @property cell
@@ -1106,7 +1098,9 @@ Attribute cascaded to appropriate FramePoint object lockY attribute
 @type Boolean
 @default false
 **/
-		my.mergeInto(my.work.d.Frame, my.work.d.Base);
+		my.mergeInto(my.Frame.prototype.defs, my.Base.prototype.defs);
+		my.Frame.prototype.getters = {};
+		my.mergeInto(my.Frame.prototype.getters, my.Base.prototype.getters);
 		/**
 Frame.registerInLibrary hook function - modified by collisions extension
 @method collisionsEntityRegisterInLibrary

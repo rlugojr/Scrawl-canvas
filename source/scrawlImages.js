@@ -79,7 +79,7 @@ False if device does not support the video element; true otherwise
 @type Boolean
 @default false
 **/
-		my.work.d.Device.video = false;
+		my.Device.prototype.defs.video = false;
 		/**
 video autoplay support
 
@@ -88,7 +88,7 @@ False if device does not support video autoplay element; true otherwise
 @type Boolean
 @default false
 **/
-		my.work.d.Device.videoAutoplay = false;
+		my.Device.prototype.defs.videoAutoplay = false;
 		/**
 video fullscreen restraint
 
@@ -97,7 +97,7 @@ False if device does not force videos to play in fullscreen mode; true otherwise
 @type Boolean
 @default false
 **/
-		my.work.d.Device.videoForceFullScreen = false;
+		my.Device.prototype.defs.videoForceFullScreen = false;
 		/**
 video as canvas source
 
@@ -106,7 +106,7 @@ False if device does not permit video elements to be used as sources for canvas 
 @type Boolean
 @default false
 **/
-		my.work.d.Device.videoAsCanvasSource = false;
+		my.Device.prototype.defs.videoAsCanvasSource = false;
 
 		/**
 Check if device supports various video functionalities
@@ -125,7 +125,7 @@ Check if device supports various video functionalities
 			this.videoAsCanvasSource = false;
 			this.videoForceFullScreen = false;
 
-			//test 1
+			// test 1
 			this.video = my.xt(v.poster);
 
 			if (this.video && this.canvas) {
@@ -158,7 +158,7 @@ Check if device supports various video functionalities
 				v.muted = true;
 				v.autoplay = true;
 
-				//test 2
+				// test 2
 				window.addEventListener('mouseup', function myautoplayvideochecker() {
 					autoplay = false;
 					v.play();
@@ -171,7 +171,7 @@ Check if device supports various video functionalities
 					}
 				}, false);
 
-				//test 3
+				// test 3
 				v.addEventListener('playing', function myusevideo() {
 					try {
 						v.pause();
@@ -189,7 +189,7 @@ Check if device supports various video functionalities
 					}
 				}, false);
 
-				//test 4
+				// test 4
 				v.addEventListener('webkitbeginfullscreen', function myforcefullscreenvideo1() {
 					v.webkitExitFullScreen();
 					my.device.videoForceFullScreen = true;
@@ -376,7 +376,7 @@ Patterns are not restricted to images. A pattern can also be sourced from anothe
 **/
 		my.Pattern.prototype.type = 'Pattern';
 		my.Pattern.prototype.classname = 'designnames';
-		my.work.d.Pattern = {
+		my.Pattern.prototype.defs = {
 			/**
 Drawing parameter
 @property repeat
@@ -416,7 +416,9 @@ Used only with __scrawl.makePattern()__ and __Pattern.clone()__ operations. This
 **/
 			callback: false,
 		};
-		my.mergeInto(my.work.d.Pattern, my.work.d.Base);
+		my.mergeInto(my.Pattern.prototype.defs, my.Base.prototype.defs);
+		my.Pattern.prototype.getters = {};
+		my.mergeInto(my.Pattern.prototype.getters, my.Base.prototype.getters);
 		/**
 Constructor/set helper
 @method getSourceType
@@ -599,7 +601,7 @@ Alias for Pattern.makeDesign()
 **/
 		my.Picture.prototype.type = 'Picture';
 		my.Picture.prototype.classname = 'entitynames';
-		my.work.d.Picture = {
+		my.Picture.prototype.defs = {
 			/**
 IMAGENAME String - source image for this entity
 @property source
@@ -720,7 +722,16 @@ Used only with __scrawl.makePicture()__ and __Picture.clone()__ operations. This
 **/
 			callback: false,
 		};
-		my.mergeInto(my.work.d.Picture, my.work.d.Entity);
+		my.mergeInto(my.Picture.prototype.defs, my.Entity.prototype.defs);
+		my.Picture.prototype.getters = {
+			width: function(){
+				return this.pasteData.w;
+			},
+			height: function(){
+				return this.pasteData.h;
+			}
+		};
+		my.mergeInto(my.Picture.prototype.getters, my.Entity.prototype.getters);
 		/**
 Augments Entity.get()
 @method get
@@ -728,17 +739,22 @@ Augments Entity.get()
 @return Attribute value
 **/
 		my.Picture.prototype.get = function(item) {
-			if (my.contains(my.work.animKeys, item)) {
-				return my.spriteanimation[this.animation].get(item);
+			var undef,
+				g = this.getters[item],
+				d, i, s;
+			if (g) {
+				return g();
 			}
-			else if (item === 'width') {
-				return this.pasteData.w;
-			}
-			else if (item === 'height') {
-				return this.pasteData.h;
-			}
-			else {
-				return my.Entity.prototype.get.call(this, item);
+			else{
+				d = this.defs[item];
+				if (typeof d !== 'undefined') {
+					i = this[item];
+					return (typeof i !== 'undefined') ? i : d;
+				}
+				else {
+					s = my.spriteanimation[this.animation];
+					return (s !== 'undefined' && my.contains(s.animKeys, item)) ? s.get(item) : my.ctx[this.context].get(item);
+				}
 			}
 		};
 		/**
@@ -880,7 +896,7 @@ Picture.setCopy update copyData object values
 					h = my.cell[src].actualHeight;
 					break;
 				default:
-					//do nothing for animations
+					// do nothing for animations
 			}
 			if (this.imageType !== 'animation') {
 				copyData.x = (copy.x.substring) ? perc(copy.x, w) : copy.x;
@@ -1437,114 +1453,6 @@ Revert pickupEntity() actions, ensuring entity is left where the user drops it
 			my.Entity.prototype.dropEntity.call(this, item);
 			this.currentStart.flag = false;
 			return this;
-		};
-		/**
-Calculate the box position of the entity
-
-Returns an object with the following attributes:
-
-* __left__ - x coordinate of top-left corner of the enclosing box relative to the current cell's top-left corner
-* __top__ - y coordinate of top-left corner of the enclosing box relative to the current cell's top-left corner
-* __bottom__ - x coordinate of bottom-right corner of the enclosing box relative to the current cell's top-left corner
-* __left__ - y coordinate of bottom-right corner of the enclosing box relative to the current cell's top-left corner
-
-@method getMaxDimensions
-@param {Object} cell object
-@param {Object} entity object
-@return dimensions object
-@private
-**/
-		my.Picture.prototype.getMaxDimensions = function(cell) {
-			var cw = cell.actualWidth,
-				ch = cell.actualHeight,
-				halfW = cw / 2,
-				halfH = ch / 2,
-				cx = this.currentStart.x,
-				cy = this.currentStart.y,
-				lw = this.pasteData.w,
-				lh = this.pasteData.h,
-				fr = this.flipReverse,
-				fu = this.flipUpend,
-				xtl, xtr, xbr, xbl, ytl, ytr, ybr, ybl,
-				x = (fr) ? cw - cx : cx,
-				y = (fu) ? ch - cy : cy,
-				w = (fr) ? -lw : lw,
-				h = (fu) ? -lh : lh,
-				o = this.currentHandle,
-				hx = (fr) ? -o.x : o.x,
-				hy = (fu) ? -o.y : o.y,
-				line = my.ctx[this.context].lineWidth || 0,
-				max, min, ax, ay, ref,
-				ceil = Math.ceil,
-				floor = Math.floor,
-				t, l, b, r,
-				roll = this.roll,
-				v = my.work.v,
-				between = my.isBetween;
-			l = (fr) ? x + hx + w : x + hx;
-			r = (fr) ? x + hx : x + hx + w;
-			t = (fu) ? y + hy + h : y + hy;
-			b = (fu) ? y + hy : y + hy + h;
-			if (roll) {
-				min = Math.min;
-				max = Math.max;
-				ref = {
-					x: x,
-					y: y
-				};
-				v.set({
-					x: l,
-					y: t
-				}).vectorSubtract(ref).rotate(roll).vectorAdd(ref);
-				xtl = v.x;
-				ytl = v.y;
-				v.set({
-					x: r,
-					y: t
-				}).vectorSubtract(ref).rotate(roll).vectorAdd(ref);
-				xtr = v.x;
-				ytr = v.y;
-				v.set({
-					x: r,
-					y: b
-				}).vectorSubtract(ref).rotate(roll).vectorAdd(ref);
-				xbl = v.x;
-				ybl = v.y;
-				v.set({
-					x: l,
-					y: b
-				}).vectorSubtract(ref).rotate(roll).vectorAdd(ref);
-				xbr = v.x;
-				ybr = v.y;
-				ax = [xtl, xtr, xbr, xbl];
-				ay = [ytl, ytr, ybr, ybl];
-				t = min.apply(Math, ay);
-				l = min.apply(Math, ax);
-				b = max.apply(Math, ay);
-				r = max.apply(Math, ax);
-			}
-			t = floor(t - line);
-			l = floor(l - line);
-			b = ceil(b + line);
-			r = ceil(r + line);
-			if (!between(t, 0, ch, true)) {
-				t = (t > halfH) ? ch : 0;
-			}
-			if (!between(b, 0, ch, true)) {
-				b = (b > halfH) ? ch : 0;
-			}
-			if (!between(l, 0, cw, true)) {
-				l = (l > halfW) ? cw : 0;
-			}
-			if (!between(r, 0, cw, true)) {
-				r = (r > halfW) ? cw : 0;
-			}
-			this.maxDimensions.top = t;
-			this.maxDimensions.bottom = b;
-			this.maxDimensions.left = l;
-			this.maxDimensions.right = r;
-			this.maxDimensions.flag = false;
-			return this.maxDimensions;
 		};
 
 		return my;
