@@ -92,30 +92,7 @@ Work vector, for wheel-specific calculations
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 		my.Wheel = function Wheel(items) {
-			var get = my.xtGet,
-			d = my.Wheel.prototype.defs;
-			items = my.safeObject(items);
-			my.Entity.call(this, items);
-			/**
-Circle radius - can be an absolute Numbewr value, or a percentage String value (relative to the Cell's width)
-@property radius
-@type Number (or String)
-@default 0
-**/
-			this.radius = get(items.radius, d.radius);
-			this.localRadius = this.setRadius(this.radius);
-			this.width = this.localRadius * 2;
-			this.height = this.width;
-			this.checkHitUsingRadius = get(items.checkHitUsingRadius, d.checkHitUsingRadius);
-			this.checkHitRadius = get(items.checkHitRadius, 0);
-			this.localCheckHitRadius = this.setRadius(this.checkHitRadius);
-			this.closed = get(items.closed, d.closed);
-			this.startAngle = get(items.startAngle, d.startAngle);
-			this.endAngle = get(items.endAngle, d.endAngle);
-			this.includeCenter = get(items.includeCenter, d.includeCenter);
-			this.clockwise = get(items.clockwise, d.clockwise);
-			this.registerInLibrary();
-			my.pushUnique(my.group[this.group].entitys, this.name);
+			this.init(items);
 			return this;
 		};
 		my.Wheel.prototype = Object.create(my.Entity.prototype);
@@ -128,6 +105,13 @@ Circle radius - can be an absolute Numbewr value, or a percentage String value (
 		my.Wheel.prototype.type = 'Wheel';
 		my.Wheel.prototype.classname = 'entitynames';
 		my.Wheel.prototype.defs = {
+			/**
+Circle radius - can be an absolute Numbewr value, or a percentage String value (relative to the Cell's width)
+@property radius
+@type Number (or String)
+@default 0
+**/
+			radius: 0,
 			/**
 Angle of the path's start point, from due east, in degrees
 @property startAngle
@@ -186,7 +170,6 @@ Calculated radius value
 @default 0
 @private
 **/
-			localRadius: 0,
 			/**
 Collision calculation value - collision radius, from start vector
 @property localCheckHitRadius
@@ -194,19 +177,19 @@ Collision calculation value - collision radius, from start vector
 @default 0
 @private
 **/
-			localCheckHitRadius: 0
 		};
 		my.mergeInto(my.Wheel.prototype.defs, my.Entity.prototype.defs);
+		my.Wheel.prototype.keyAttributeList = my.mergeArraysUnique(my.Entity.prototype.keyAttributeList, ['radius', 'startAngle', 'endAngle', 'clockwise', 'closed', 'includeCenter', 'checkHitUsingRadius', 'checkHitRadius']);
 		my.Wheel.prototype.getters = {};
 		my.mergeInto(my.Wheel.prototype.getters, my.Entity.prototype.getters);
 		my.Wheel.prototype.setters = {
 			radius: function(item){
 				this.radius = item;
-				this.localRadius = this.setRadius(this.radius);
+				this.localRadiusFlag = true;
 			},
 			checkHitRadius: function(item){
 				this.checkHitRadius = item;
-				this.localCheckHitRadius = this.setRadius(this.checkHitRadius);
+				this.localRadiusFlag = true;
 			},
 		};
 		my.mergeInto(my.Wheel.prototype.setters, my.Entity.prototype.setters);
@@ -219,7 +202,7 @@ Collision calculation value - collision radius, from start vector
 				else{
 					this.radius += item;
 				}
-				this.localRadius += this.setRadius(this.radius);
+				this.localRadiusFlag = true;
 			},
 			checkHitRadius: function(item){
 				var n = this.checkHitRadius;
@@ -229,7 +212,7 @@ Collision calculation value - collision radius, from start vector
 				else{
 					this.checkHitRadius += item;
 				}
-				this.localCheckHitRadius += this.setRadius(this.checkHitRadius);
+				this.localRadiusFlag = true;
 			}
 		};
 		my.mergeInto(my.Wheel.prototype.deltaSetters, my.Entity.prototype.deltaSetters);
@@ -343,12 +326,15 @@ Stamp helper function - define the entity's path on the &lt;canvas&gt; element's
 **/
 		my.Wheel.prototype.buildPath = function(ctx, cell) {
 			var here = this.currentHandle,
-				startAngle = this.startAngle || 0,
-				endAngle = this.endAngle || 360,
-				rad = my.work.radian;
+				rad = 0.0174533;
+			if(this.localRadiusFlag){
+				this.localRadiusFlag = false;
+				this.localRadius = this.setRadius(this.radius);
+				this.localCheckHitRadius = this.setRadius(this.checkHitRadius);
+			}
 			this.rotateCell(ctx, cell);
 			ctx.beginPath();
-			ctx.arc(here.x, here.y, (this.localRadius * this.scale), (startAngle * rad), (endAngle * rad), this.clockwise);
+			ctx.arc(here.x, here.y, (this.localRadius * this.scale), (this.startAngle * rad), (this.endAngle * rad), this.clockwise);
 			if (this.includeCenter) {
 				ctx.lineTo(here.x, here.y);
 			}

@@ -111,7 +111,7 @@ Scrawl.js version number
 @default 6.0.1
 @final
 **/
-	my.version = '6.0.1';
+	my.version = '7.0.0';
 	/**
 Array of array object keys used to define the sections of the Scrawl library
 @property nameslist
@@ -119,14 +119,14 @@ Array of array object keys used to define the sections of the Scrawl library
 @private
 **/
 	my.work = {};
-	my.work.nameslist = ['padnames', 'cellnames', 'ctxnames', 'groupnames', 'designnames', 'entitynames', 'animationnames'];
+	my.work.nameslist = ['padnames', 'cellnames', 'ctxnames', 'groupnames', 'designnames', 'entitynames', 'animationnames', 'objectnames'];
 	/**
 Array of objects which define the sections of the Scrawl library
 @property sectionlist
 @type {Array}
 @private
 **/
-	my.work.sectionlist = ['pad', 'cell', 'canvas', 'context', 'ctx', 'imageData', 'group', 'design', 'dsn', 'entity', 'animation'];
+	my.work.sectionlist = ['pad', 'cell', 'canvas', 'context', 'ctx', 'imageData', 'group', 'design', 'dsn', 'entity', 'animation', 'object'];
 	/**
 For converting between degrees and radians
 @property radian
@@ -667,6 +667,38 @@ A __utility__ function that adds the attributes of the additive object to those 
 		return o1;
 	};
 	/**
+A __utility__ function that takes two arrays and creates merges both into a new array, ensuring all elements in the new array are unique
+@method mergeArraysUnique
+@param {Array} a1 reference object
+@param {Array} a2 additive object
+@return new Array
+@example
+    var old = ['Apple', 'Orange', 'Banana', 'Orange'],
+	    new = ['Peach', 'Apple', 'Cherry', 'Orange'];
+    scrawl.mergeArraysUnique(old, new);
+    //result is ['Apple', 'Orange', 'Banana', 'Peach', 'Cherry']
+**/
+	my.mergeArraysUnique = function(a1, a2) {
+		var result = [],
+			item,
+			i, iz;
+		if(Array.isArray(a1) && Array.isArray(a2)){
+			for (i = 0, iz = a1.length; i < iz; i++) {
+				item = a1[i];
+				if (result.indexOf(item) < 0) {
+					result.push(item);
+				}
+			}
+			for (i = 0, iz = a2.length; i < iz; i++) {
+				item = a2[i];
+				if (result.indexOf(item) < 0) {
+					result.push(item);
+				}
+			}
+		}
+		return result;
+	};
+	/**
 A __utility__ function that adds the attributes of the additive object to those of the reference object, overwriting attributes where necessary
 @method mergeOver
 @param {Object} o1 reference object
@@ -1007,25 +1039,6 @@ A __utility__ function for variable type checking
 					return true;
 				}
 			}
-		}
-		return false;
-	};
-	/**
-Generate unique names for new Scrawl objects
-@method makeName
-@param {Object} [item] Object with attributes: name, type, target
-@return Unique generated name
-@private
-**/
-	my.makeName = function(item) {
-		var name,
-			nameArray;
-		item = my.safeObject(item);
-		if (my.contains(my.work.nameslist, item.target)) {
-			name = my.xtGetTrue(item.name, item.type, 'default');
-			name = name.replace(/[\.\/ \+\*\[\{\(\)~\-#\\\^\$\|\?]/g, '_');
-			nameArray = name.split('___');
-			return (my.contains(my[item.target], nameArray[0])) ? nameArray[0] + '___' + Math.floor(Math.random() * 100000000) : nameArray[0];
 		}
 		return false;
 	};
@@ -2311,17 +2324,6 @@ Rotate a Vector object by a Quaternion rotation
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 	my.Base = function(items) {
-		items = my.safeObject(items);
-		/**
-Unique identifier for each object; default: computer-generated String based on Object's type
-@property name
-@type String
-**/
-		this.name = my.makeName({
-			name: items.name,
-			type: this.type,
-			target: this.classname
-		});
 		return this;
 	};
 	my.Base.prototype = Object.create(Object.prototype);
@@ -2332,8 +2334,46 @@ Unique identifier for each object; default: computer-generated String based on O
 @final
 **/
 	my.Base.prototype.type = 'Base';
-	my.Base.prototype.classname = 'objectnames';
+	my.Base.prototype.lib = 'object';
+	my.Base.prototype.libName = 'objectnames';
+
+	my.Base.prototype.init = function(items){
+		items = (Object.prototype.toString.call(items) === '[object Object]') ? items : {};
+		this.makeName(items.name);
+		delete items.name;
+		this.buildVectors();
+		this.addContext(items);
+		this.set.call(this, items);
+		this.setKeyAttributes();
+		this.preRegister(items);
+		this.register();
+		this.postRegister(items);
+		return items;
+	};
+	my.Base.prototype.buildVectors = function(){};
+	my.Base.prototype.preRegister = function(items){};
+	my.Base.prototype.postRegister = function(items){};
+	my.Base.prototype.addContext = function(items){};
+	my.Base.prototype.register = function(){
+		my[this.lib][this.name] = this;
+		my.pushUnique(my[this.libName], this.name);
+	};
+	my.Base.prototype.keyAttributeList = [];
+	my.Base.prototype.setKeyAttributes = function(){
+		var keys = this.keyAttributeList,
+			key,
+			i, iz;
+		for(i = 0, iz = keys.length; i < iz; i++){
+			key = keys[i];
+			this[key] = this.get(key);
+		}
+	};
 	my.Base.prototype.defs = {
+		/**
+Unique identifier for each object; default: computer-generated String based on Object's type
+@property name
+@type String
+**/
 		/**
 Comment, for accessibility
 @property comment
@@ -2374,7 +2414,7 @@ Retrieve an attribute value. If the attribute value has not been set, then the d
 			g = this.getters[item],
 			d, i;
 		if (g) {
-			return g();
+			return g.call(this);
 		}
 		else{
 			d = this.defs[item];
@@ -2387,11 +2427,7 @@ Retrieve an attribute value. If the attribute value has not been set, then the d
 			}
 		}
 	};
-	my.Base.prototype.getters = {
-		name: function(){
-			return this.name;
-		}
-	};
+	my.Base.prototype.getters = {};
 	/**
 Set attribute values. Multiple attributes can be set in the one call by including the attribute key:value pair in the argument object.
 
@@ -2462,7 +2498,7 @@ An attribute value will only be set if the object already has a default value fo
 			s = setters[s],
 			item = items[key];
 			if(s){
-				s(item);
+				s.call(this, item);
 			}
 			else if (typeof d[key] !== 'undefined') {
 				current = this[key];
@@ -2480,6 +2516,25 @@ An attribute value will only be set if the object already has a default value fo
 		return this;
 	};
 	my.Base.prototype.deltaSetters = {};
+	/**
+Generate unique names for new Scrawl objects
+@method makeName
+@param {String} [suggestedName] String of the suggested name
+@return always true
+@private
+**/
+	my.Base.prototype.makeName = function(suggestedName) {
+		var name, nameArray;
+		if(my.work.nameslist.indexOf(this.libName) >= 0){
+			name = my.xtGetTrue(suggestedName, this.type, 'default');
+			name = name.replace(/[\.\/ \+\*\[\{\(\)~\-#\\\^\$\|\?]/g, '_');
+			nameArray = name.split('___');
+			this.name = (my[this.libName].indexOf(nameArray[0]) >= 0) ? nameArray[0] + '___' + Math.floor(Math.random() * 100000000) : nameArray[0];
+		}
+		else{
+			this.name = 'unclassifiedScrawlObject___' + Math.floor(Math.random() * 100000000);
+		}
+	};
 	/**
 Clone a Scrawl.js object, optionally altering attribute values in the cloned object
 
@@ -2502,22 +2557,35 @@ Note that any callback or fn attribute functions will be referenced by the clone
     newBox.get('width');        //returns 50
     newBox.get('height');       //returns 100
 **/
+	my.Base.prototype.cloneExcludedAttributes = ['name'];
+	my.Base.prototype.cloneAmendments = function(a, b) {
+		return a;
+	};
 	my.Base.prototype.clone = function(items) {
-		var merged,
-			keys,
-			that,
-			i,
-			iz;
-		merged = my.mergeOver(this.parse(), my.safeObject(items));
-		delete merged.context; //required for successful cloning of entitys
-		keys = Object.keys(this);
-		that = this;
-		for (i = 0, iz = keys.length; i < iz; i++) {
-			if (my.isa_fn(this[keys[i]])) {
-				merged[keys[i]] = that[keys[i]];
+		items = (Object.prototype.toString.call(items) === '[object Object]') ? items : {};
+		var clone, current, i, iz,
+			target = 'make' + this.type,
+			attr = this.cloneExcludedAttributes;
+
+		if(my[target])
+		clone = my[target]({
+			name: items.name || this.name
+		});
+
+		if(clone){
+			current = this.parse();
+			items = this.cloneAmendments(items, current);
+			for(i = 0, iz = attr.length; i < iz; i++){
+				delete current[attr[i]];
 			}
+			items = my.mergeInto(items, current);
+			if(this.context && my.ctx[this.context]){
+				current = JSON.parse(JSON.stringify(my.ctx[this.context]));
+				items = my.mergeInto(items, current);
+			}
+			clone.set(items);
 		}
-		return new my[this.type](merged);
+		return clone;
 	};
 	/**
 Turn the object into a JSON String
@@ -2567,42 +2635,59 @@ Stamp helper function - convert string percentage values to numerical values
 @extends Base
 **/
 	my.Device = function() {
+		this.init();
+		return this;
+	};
+	my.Device.prototype = Object.create(my.Base.prototype);
+	my.Device.prototype.preRegister = function(){
 		this.name = 'scrawl_viewport';
+		this.getDeviceData();
+	};
+	/**
+@property type
+@type String
+@default 'Device'
+@final
+**/
+	my.Device.prototype.type = 'Device';
+	my.Device.prototype.lib = 'object';
+	my.Device.prototype.libName = 'objectnames';
+	my.Device.prototype.defs = {
 		/**
 viewport width
 @property width
 @type Number
 @default calculated automatically
 **/
-		this.width = null;
+		width: null,
 		/**
 viewport height
 @property height
 @type Number
 @default calculated automatically
 **/
-		this.height = null;
+		height: null,
 		/**
 viewport offset from the top of the document
 @property offsetX
 @type Number
 @default calculated automatically
 **/
-		this.offsetX = null;
+		offsetX: null,
 		/**
 viewport offset from the left side of the document
 @property offsetY
 @type Number
 @default calculated automatically
 **/
-		this.offsetY = null;
+		offsetY: null,
 		/**
 Device/browser is touch-enabled and we should expect to receive touch events
 @property expectTouch
 @type Number
 @default calculated automatically
 **/
-		this.expectTouch = false;
+		expectTouch: false,
 		/**
 canvas support
 
@@ -2611,7 +2696,7 @@ False if device does not support the canvas element; true otherwise
 @type Boolean
 @default false
 **/
-		this.canvas = false;
+		canvas: false,
 		/**
 canvas global composite operation support: source-in
 
@@ -2620,7 +2705,7 @@ False if device incorrectly supports the GCO source-in functionality
 @type Boolean
 @default false
 **/
-		this.canvasGcoSourceIn = false;
+		canvasGcoSourceIn: false,
 		/**
 canvas global composite operation support: source-out
 
@@ -2629,7 +2714,7 @@ False if device incorrectly supports the GCO source-out functionality
 @type Boolean
 @default false
 **/
-		this.canvasGcoSourceOut = false;
+		canvasGcoSourceOut: false,
 		/**
 canvas global composite operation support: destination-atop
 
@@ -2638,7 +2723,7 @@ False if device incorrectly supports the GCO destination-atop functionality
 @type Boolean
 @default false
 **/
-		this.canvasGcoDestinationAtop = false;
+		canvasGcoDestinationAtop: false,
 		/**
 canvas global composite operation support: destination-in
 
@@ -2647,7 +2732,7 @@ False if device incorrectly supports the GCO destination-in functionality
 @type Boolean
 @default false
 **/
-		this.canvasGcoDestinationIn = false;
+		canvasGcoDestinationIn: false,
 		/**
 canvas global composite operation support: copy
 
@@ -2656,7 +2741,7 @@ False if device incorrectly supports the GCO copy functionality
 @type Boolean
 @default false
 **/
-		this.canvasGcoCopy = false;
+		canvasGcoCopy: false,
 		/**
 canvas even-odd winding functionality
 
@@ -2665,7 +2750,7 @@ False if device does not support the canvas even-odd winding functionality; true
 @type Boolean
 @default false
 **/
-		this.canvasEvenOddWinding = false;
+		canvasEvenOddWinding: false,
 		/**
 canvas dashed line functionality
 
@@ -2674,36 +2759,7 @@ False if device does not support the canvas dashed line functionality; true othe
 @type Boolean
 @default false
 **/
-		this.canvasDashedLine = false;
-		this.getDeviceData();
-		return this;
-	};
-	my.Device.prototype = Object.create(my.Base.prototype);
-	/**
-@property type
-@type String
-@default 'Device'
-@final
-**/
-	my.Device.prototype.type = 'Device';
-	my.Device.prototype.classname = 'objectnames';
-	my.Device.prototype.defs = {
-		width: null,
-		height: null,
-		offsetX: null,
-		offsetY: null,
-		expectTouch: false,
-		canvas: false,
-		canvasEvenOddWinding: false,
 		canvasDashedLine: false,
-		canvasGcoSourceIn: false,
-		canvasGcoSourceOut: false,
-		canvasGcoDestinationAtop: false,
-		canvasGcoDestinationIn: false,
-		canvasGcoCopy: false,
-		video: false,
-		videoAutoplay: false,
-		videoForceFullScreen: false
 	};
 	my.mergeInto(my.Device.prototype.defs, my.Base.prototype.defs);
 
@@ -2970,12 +3026,19 @@ Certain Scrawl extensions will add functionality to this object, for instance sc
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 	my.Position = function(items) {
-		var so = my.safeObject,
-			d = my[this.type].prototype.defs,
-			get = my.xtGet,
-			vec = my.makeVector;
-		my.Base.call(this, items);
-		items = so(items);
+		return this;
+	};
+	my.Position.prototype = Object.create(my.Base.prototype);
+	/**
+@property type
+@type String
+@default 'Position'
+@final
+**/
+	my.Position.prototype.type = 'Position';
+	my.Position.prototype.lib = 'object';
+	my.Position.prototype.libName = 'objectnames';
+	my.Position.prototype.defs = {
 		/**
 The coordinate Vector representing the object's rotation/flip point
 
@@ -2987,16 +3050,10 @@ SubScrawl, and all Objects that prototype chain to Subscrawl, supports the follo
 @property start
 @type Vector
 **/
-		var temp = so(items.start);
-		this.start = vec({
-			x: get(items.startX, temp.x, 0),
-			y: get(items.startY, temp.y, 0),
-			name: this.type + '.' + this.name + '.start'
-		});
-		this.currentStart = vec({
-			name: this.type + '.' + this.name + '.current.start'
-		});
-		this.currentStart.flag = false;
+		start: {
+			x: 0,
+			y: 0
+		},
 		/**
 An Object (in fact, a Vector) containing offset instructions from the object's rotation/flip point, where drawing commences. 
 
@@ -3010,65 +3067,59 @@ Where values are Numbers, handle can be treated like any other Vector
 @property handle
 @type Object
 **/
-		temp = so(items.handle);
-		this.handle = vec({
-			x: get(items.handleX, temp.x, 0),
-			y: get(items.handleY, temp.y, 0),
-			name: this.type + '.' + this.name + '.handle'
-		});
-		this.currentHandle = vec({
-			name: this.type + '.' + this.name + '.current.handle'
-		});
-		this.currentHandle.flag = false;
+		handle: {
+			x: 0,
+			y: 0
+		},
 		/**
 The ENTITYNAME or POINTNAME of a entity or Point object to be used for setting this object's start point
 @property pivot
 @type String
 @default null
 **/
-		this.pivot = get(items.pivot, d.pivot);
+		pivot: null,
 		/**
 The object's scale value - larger values increase the object's size
 @property scale
 @type Number
 @default 1
 **/
-		this.scale = get(items.scale, d.scale);
-		/**
-Current rotation of the entity, cell or element (in degrees)
-@property roll
-@type Number
-@default 0
-**/
-		this.roll = get(items.roll, d.roll);
+		scale: 1,
 		/**
 Reflection flag; set to true to flip entity, cell or element along the Y axis
 @property flipReverse
 @type Boolean
 @default false
 **/
-		this.flipReverse = get(items.flipReverse, d.flipReverse);
+		flipReverse: false,
 		/**
 Reflection flag; set to true to flip entity, cell or element along the X axis
 @property flipUpend
 @type Boolean
 @default false
 **/
-		this.flipUpend = get(items.flipUpend, d.flipUpend);
+		flipUpend: false,
 		/**
 Positioning flag; set to true to ignore path/pivot/mouse changes along the X axis
 @property lockX
 @type Boolean
 @default false
 **/
-		this.lockX = get(items.lockX, d.lockX);
+		lockX: false,
 		/**
 Positioning flag; set to true to ignore path/pivot/mouse changes along the Y axis
 @property lockY
 @type Boolean
 @default false
 **/
-		this.lockY = get(items.lockY, d.lockY);
+		lockY: false,
+		/**
+Current rotation of the entity, cell or element (in degrees)
+@property roll
+@type Number
+@default 0
+**/
+		roll: 0,
 		/**
 Index of mouse vector to use when pivot === 'mouse'
 
@@ -3077,44 +3128,6 @@ The Pad.mice object can hold details of multiple touch events - when an entity i
 @type String
 @default 'mouse'
 **/
-		this.mouseIndex = get(items.mouseIndex, 'mouse');
-		this.animationPositionInit(items);
-		this.pathPositionInit(items);
-		return this;
-	};
-	my.Position.prototype = Object.create(my.Base.prototype);
-	/**
-@property type
-@type String
-@default 'Position'
-@final
-**/
-	my.Position.prototype.type = 'Position';
-	my.Position.prototype.classname = 'objectnames';
-	my.Position.prototype.defs = {
-		start: {
-			x: 0,
-			y: 0
-		},
-		currentStart: {
-			x: 0,
-			y: 0
-		},
-		handle: {
-			x: 0,
-			y: 0
-		},
-		currentHandle: {
-			x: 0,
-			y: 0
-		},
-		pivot: null,
-		scale: 1,
-		flipReverse: false,
-		flipUpend: false,
-		lockX: false,
-		lockY: false,
-		roll: 0,
 		mouseIndex: 'mouse',
 		/**
 Entity, cell or element width (in pixels)
@@ -3132,18 +3145,27 @@ Entity, cell or element height (in pixels)
 		height: 0
 	};
 	my.mergeInto(my.Position.prototype.defs, my.Base.prototype.defs);
-	/**
-Position constructor hook function - modified by animation extension
-@method animationPositionInit
-@private
-**/
-	my.Position.prototype.animationPositionInit = function(items) {};
-	/**
-Position constructor hook function - modified by path extension
-@method pathPositionInit
-@private
-**/
-	my.Position.prototype.pathPositionInit = function(items) {};
+	my.Position.prototype.keyAttributeList = my.mergeArraysUnique(my.Base.prototype.keyAttributeList, ['pivot', 'scale', 'flipReverse', 'flipUpend', 'lockX', 'lockY', 'roll', 'mouseIndex', 'width', 'height']);
+	my.Position.prototype.cloneExcludedAttributes = my.mergeArraysUnique(my.Base.prototype.cloneExcludedAttributes, ['start', 'handle']);
+	my.Position.prototype.cloneAmendments = function(a, b) {
+		var get = my.xtGet,
+			xt = my.xt;
+		if(!xt(a.start)){
+			a.start = {};
+			a.start.x = get(a.startX, b.start.x);
+			a.start.y = get(a.startY, b.start.y);
+		}
+		delete a.startX;
+		delete a.startY;
+		if(!xt(a.handle)){
+			a.handle = {};
+			a.handle.x = get(a.handleX, b.handle.x);
+			a.handle.y = get(a.handleY, b.handle.y);
+		}
+		delete a.handleX;
+		delete a.handleY;
+		return a;
+	};
 	my.Position.prototype.getters = {
 		startX: function(){
 			return this.start.x;
@@ -3228,16 +3250,6 @@ Get the current start y coordinate
 		},
 	};
 	my.mergeInto(my.Position.prototype.setters, my.Base.prototype.setters);
-	/**
-Position.set hook function - modified by animation extension
-@method animationPositionSet
-@private
-**/
-	my.Position.prototype.animationPositionSet = function(items) {};
-	my.Position.prototype.updateStart = function(item) {};
-	my.Position.prototype.revertStart = function(item) {};
-	my.Position.prototype.reverse = function(item) {};
-	my.Position.prototype.setDeltaAttribute = function(items) {};
 	my.Position.prototype.deltaSetters = {
 		startX: function(item){
 			var n = this.start.x;
@@ -3350,61 +3362,30 @@ Position.set hook function - modified by animation extension
 	};
 	my.mergeInto(my.Position.prototype.deltaSetters, my.Base.prototype.deltaSetters);
 	/**
-Position.setDelta hook function - modified by path extension
-@method pathPositionSetDelta
+Position.set hook function - modified by animation extension
+@method animationPositionSet
 @private
 **/
-	my.Position.prototype.pathPositionSetDelta = function(items) {};
-	/**
-Augments Base.clone(), to allow users to set the start and handle attributes using startX, startY, handleX, handleY
-
-@method clone
-@param {Object} items Object consisting of key:value attributes, used to update the clone's attributes with new values
-@return Cloned object
-@chainable
-**/
-	my.Position.prototype.clone = function(items) {
-		var temp,
-			clone,
-			so = my.safeObject,
-			vec = my.makeVector,
-			get = my.xtGet,
-			raw,
-			merged,
-			keys,
-			that,
-			i,
-			iz;
-		items = so(items);
-		raw = this.parse();
-		delete raw.start;
-		delete raw.handle;
-		delete raw.currentStart;
-		delete raw.currentHandle;
-		delete raw.context;
-		merged = my.mergeOver(raw, items);
-		keys = Object.keys(this);
-		that = this;
-		for (i = 0, iz = keys.length; i < iz; i++) {
-			if (my.isa_fn(this[keys[i]])) {
-				merged[keys[i]] = that[keys[i]];
-			}
-		}
-		clone = new my[this.type](merged);
-		temp = so(items.start);
-		clone.start = vec({
-			x: get(items.startX, temp.x, this.start.x),
-			y: get(items.startY, temp.y, this.start.y),
-			name: clone.type + '.' + clone.name + '.start'
+	my.Position.prototype.updateStart = function(item) {};
+	my.Position.prototype.revertStart = function(item) {};
+	my.Position.prototype.reverse = function(item) {};
+	my.Position.prototype.setDeltaAttribute = function(items) {};
+	my.Position.prototype.buildVectors = function(){
+		var vec = my.makeVector;
+		this.start = vec({
+			name: this.type + '.' + this.name + '.start'
 		});
-		temp = so(items.handle);
-		clone.handle = vec({
-			x: get(items.handleX, temp.x, this.handle.x),
-			y: get(items.handleY, temp.y, this.handle.y),
-			name: clone.type + '.' + clone.name + '.handle'
+		this.currentStart = vec({
+			name: this.type + '.' + this.name + '.current.start'
 		});
-		clone = this.animationPositionClone(clone, items);
-		return clone;
+		this.currentStart.flag = false;
+		this.handle = vec({
+			name: this.type + '.' + this.name + '.handle'
+		});
+		this.currentHandle = vec({
+			name: this.type + '.' + this.name + '.current.handle'
+		});
+		this.currentHandle.flag = false;
 	};
 	/**
 Position.setDelta hook function - modified by animation extension
@@ -3705,51 +3686,6 @@ The core implementation of this object is a stub that supplies Pad objects with 
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 	my.PageElement = function(items) {
-		var get = my.xtGet,
-			d = my[this.type].prototype.defs;
-		items = my.safeObject(items);
-		my.Base.call(this, items);
-		this.dirty = {};
-		/**
-DOM element width
-@property width
-@type Number
-@default 300
-**/
-		this.width = get(items.width, d.width);
-		/**
-DOM element height
-@property height
-@type Number
-@default 150
-**/
-		this.height = get(items.height, d.height);
-		/**
-The object's scale value - larger values increase the object's size
-@property scale
-@type Number
-@default 1
-**/
-		this.scale = get(items.scale, d.scale);
-		this.propogateTouch = get(items.propogateTouch, d.propogateTouch);
-		this.setLocalDimensions();
-		this.stacksPageElementConstructor(items);
-		/**
-The mice attribute is an object containing supplemented vectors which hold real-time information about the current coordinates of the mouse pointer and any other pointer or touch instances occurring over the element
-
-mice.mouse - always refers to the mouse pointer
-mice.ui0, mice.ui1 etc - refers to pointer and touch events
-
-@property mice
-@type Object
-@default {}
-**/
-		this.mice = {
-			mouse: my.makeVector()
-		};
-		this.mice.mouse.id = 'mouse';
-		this.mice.mouse.active = false;
-		this.mice.mouse.name = this.type + '.' + this.name + '.ui.mouse';
 		return this;
 	};
 	my.PageElement.prototype = Object.create(my.Base.prototype);
@@ -3760,9 +3696,28 @@ mice.ui0, mice.ui1 etc - refers to pointer and touch events
 @final
 **/
 	my.PageElement.prototype.type = 'PageElement';
-	my.PageElement.prototype.classname = 'objectnames';
+	my.PageElement.prototype.lib = 'object';
+	my.PageElement.prototype.libName = 'objectnames';
+	my.PageElement.prototype.preRegister = function(items){
+		this.setLocalDimensions();
+	};
+	my.PageElement.prototype.postRegister = function(items){};
+	my.PageElement.prototype.cloneExcludedAttributes = my.mergeArraysUnique(my.Base.prototype.cloneExcludedAttributes, ['mice']);
+	my.PageElement.prototype.keyAttributeList = my.mergeArraysUnique(my.Base.prototype.keyAttributeList, ['width', 'height', 'displayOffsetX', 'displayOffsetY', 'scale', 'interactive', 'propogateTouch', 'position']);
 	my.PageElement.prototype.defs = {
+		/**
+DOM element width
+@property width
+@type Number
+@default 300
+**/
 		width: 300,
+		/**
+DOM element height
+@property height
+@type Number
+@default 150
+**/
 		height: 150,
 		/**
 DOM element localWidth
@@ -3770,14 +3725,12 @@ DOM element localWidth
 @type Number
 @default 300
 **/
-		localWidth: 300,
 		/**
 DOM element localHeight
 @property localHeight
 @type Number
 @default 150
 **/
-		localHeight: 150,
 		/**
 DOM element's current horizontal offset from the top of the web page
 @property displayOffsetX
@@ -3792,8 +3745,23 @@ DOM element's current vertical offset from the left side of the web page
 @default 0
 **/
 		displayOffsetY: 0,
+		/**
+The object's scale value - larger values increase the object's size
+@property scale
+@type Number
+@default 1
+**/
 		scale: 1,
-		mice: {},
+		/**
+The mice attribute is an object containing supplemented vectors which hold real-time information about the current coordinates of the mouse pointer and any other pointer or touch instances occurring over the element
+
+mice.mouse - always refers to the mouse pointer
+mice.ui0, mice.ui1 etc - refers to pointer and touch events
+
+@property mice
+@type Object
+@default {}
+**/
 		/**
 Set the interactive attribute to true to track mouse/pointer/touch events on the element. By default Pad and Stack objects set their element's interactivity to true, while Element objects set it to false 
 @property interactive
@@ -3817,12 +3785,15 @@ Element CSS position styling attribute
 		position: 'static'
 	};
 	my.mergeInto(my.PageElement.prototype.defs, my.Base.prototype.defs);
-	/**
-PageElement constructor hook function - modified by stacks extension
-@method stacksPageElementConstructor
-@private
-**/
-	my.PageElement.prototype.stacksPageElementConstructor = function(items) {};
+	my.PageElement.prototype.buildVectors = function(){
+		this.dirty = {};
+		this.mice = {
+			mouse: my.makeVector()
+		};
+		this.mice.mouse.id = 'mouse';
+		this.mice.mouse.active = false;
+		this.mice.mouse.name = this.type + '.' + this.name + '.ui.mouse';
+	};
 	/**
 Augments Base.get() to retrieve DOM element width and height values
 
@@ -3838,7 +3809,7 @@ Augments Base.get() to retrieve DOM element width and height values
 			d, i, e;
 		if (g) {
 			e = this.getElement();
-			return g(e);
+			return g.call(this, e);
 		}
 		else{
 			d = this.defs[item];
@@ -4396,69 +4367,109 @@ Because the Pad constructor calls the Cell constructor as part of the constructi
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 	my.Pad = function(items) {
-		var display,
-			base,
-			canvas,
-			get = my.xtGet,
-			d = my.Pad.prototype.defs,
-			pu = my.pushUnique,
-			makeCell = my.makeCell;
-		items = my.safeObject(items);
+		var get = my.xtGet,
+			d = my.Pad.prototype.defs;
+
+		items = (Object.prototype.toString.call(items) === '[object Object]') ? items : {};
+
 		if (my.isa_canvas(items.canvasElement)) {
 			items.width = get(items.width, items.canvasElement.width, d.width);
 			items.height = get(items.height, items.canvasElement.height, d.height);
 			items.name = get(items.name, items.canvasElement.id, items.canvasElement.name, 'Pad');
-			my.PageElement.call(this, items);
+			this.makeName(items.name);
 			if (this.name.match(/___/)) {
 				this.name = this.name.replace(/___/g, '_');
 			}
+			this.buildVectors();
+			this.set(items);
+			this.setKeyAttributes();
 			items.canvasElement.id = this.name;
-			my.pad[this.name] = this;
-			pu(my.padnames, this.name);
-
+			this.preRegister(items);
+			this.register();
+			this.postRegister(items);
+			this.cellsCompileOrder = [].concat(this.cells);
+			this.cellsShowOrder = [].concat(this.cells);
+			this.resortCompile = true;
+			this.resortShow = true;
+		}
+		return this;
+	};
+	my.Pad.prototype = Object.create(my.PageElement.prototype);
+	/**
+@property type
+@type String
+@default 'Pad'
+@final
+**/
+	my.Pad.prototype.type = 'Pad';
+	my.Pad.prototype.lib = 'pad';
+	my.Pad.prototype.libName = 'padnames';
+	my.Pad.prototype.preRegister = function(items){
+		var display,
+			base,
+			canvas,
+			pu = my.pushUnique,
+			makeCell = my.makeCell;
+		this.dirty = {};
+		this.cells = [];
+		display = makeCell({
+			name: this.name,
+			pad: this.name,
+			canvas: items.canvasElement,
+			compiled: false,
+			shown: false,
+			width: this.localWidth,
+			height: this.localHeight
+		});
+		pu(this.cells, display.name);
+		this.display = display.name;
+		canvas = items.canvasElement.cloneNode(true);
+		canvas.setAttribute('id', this.name + '_base');
+		base = makeCell({
+			name: this.name + '_base',
+			pad: this.name,
+			canvas: canvas,
+			compileOrder: 9999,
+			shown: false,
+			width: '100%',
+			height: '100%'
+		});
+		pu(this.cells, base.name);
+		this.base = base.name;
+		this.current = base.name;
+	};
+	my.Pad.prototype.postRegister = function(items){
+		this.setDisplayOffsets();
+		this.setAccessibility(items);
+		this.interactive = my.xtGet(items.interactive, true);
+		if (this.interactive) {
+			this.addMouseMove();
+		}
+		this.setLocalDimensions();
+	};
+	my.Pad.prototype.keyAttributeList = my.mergeArraysUnique(my.PageElement.prototype.keyAttributeList, []);
+	my.Pad.prototype.defs = {
 			/**
 Array of CELLNAME Strings associated with this Pad
 @property cells
 @type Array
 @default []
 **/
-			this.cells = [];
-			display = makeCell({
-				name: this.name,
-				pad: this.name,
-				canvas: items.canvasElement,
-				compiled: false,
-				shown: false,
-				width: this.localWidth,
-				height: this.localHeight
-			});
-			pu(this.cells, display.name);
+		cells: [],
 			/**
 Pad's display (visible) &lt;canvas&gt; element - CELLNAME
 @property display
 @type String
 @default ''
 **/
-			this.display = display.name;
-			canvas = items.canvasElement.cloneNode(true);
-			canvas.setAttribute('id', this.name + '_base');
-			base = makeCell({
-				name: this.name + '_base',
-				pad: this.name,
-				canvas: canvas,
-				compileOrder: 9999,
-				shown: false,
-				width: '100%',
-				height: '100%'
-			});
-			pu(this.cells, base.name);
+		display: '',
 			/**
 Pad's base (hidden) &lt;canvas&gt; element - CELLNAME
 @property base
 @type String
 @default ''
 **/
-			this.base = base.name;
+		base: '',
 			/**
 Pad's currently active &lt;canvas&gt; element - CELLNAME
 
@@ -4469,35 +4480,6 @@ Pad's currently active &lt;canvas&gt; element - CELLNAME
 @default ''
 @deprecated
 **/
-			this.current = base.name;
-			this.setDisplayOffsets();
-			this.setAccessibility(items);
-			this.padStacksConstructor(items);
-			this.interactive = get(items.interactive, true);
-			if (this.interactive) {
-				this.addMouseMove();
-			}
-			this.cellsCompileOrder = [].concat(this.cells);
-			this.cellsShowOrder = [].concat(this.cells);
-			this.resortCompile = true;
-			this.resortShow = true;
-			return this;
-		}
-		return false;
-	};
-	my.Pad.prototype = Object.create(my.PageElement.prototype);
-	/**
-@property type
-@type String
-@default 'Pad'
-@final
-**/
-	my.Pad.prototype.type = 'Pad';
-	my.Pad.prototype.classname = 'padnames';
-	my.Pad.prototype.defs = {
-		cells: [],
-		display: '',
-		base: '',
 		current: ''
 	};
 	my.mergeInto(my.Pad.prototype.defs, my.PageElement.prototype.defs);
@@ -4884,24 +4866,10 @@ _Note: A Cell is entirely responsible for determining what portion of its &lt;ca
 **/
 	my.Cell = function(items) {
 		items = my.safeObject(items);
-		if (my.xta(items, items.canvas)) { //flag used by Pad constructor when calling Cell constructor
-			/**
-The coordinate Vector representing the Cell's target position on the &lt;canvas&gt; to which it is to be copied
-
-Cell supports the following 'virtual' attributes for this attribute:
-
-* __startX__ or __targetX__ - (Number) the x coordinate on the destination &lt;canvas&gt;
-* __startY__ or __targetY__ - (Number) the y coordinate on the destination &lt;canvas&gt;
-
-@property start
-@type Vector
-**/
-			this.coreCellInit(items);
-			this.animationCellInit(items);
-			this.collisionsCellInit(items);
-			return this;
+		if (my.xt(items.canvas)) { //flag used by Pad constructor when calling Cell constructor
+			this.init(items);
 		}
-		return false;
+		return this;
 	};
 	my.Cell.prototype = Object.create(my.Position.prototype);
 	/**
@@ -4911,8 +4879,50 @@ Cell supports the following 'virtual' attributes for this attribute:
 @final
 **/
 	my.Cell.prototype.type = 'Cell';
-	my.Cell.prototype.classname = 'cellnames';
+	my.Cell.prototype.lib = 'cell';
+	my.Cell.prototype.libName = 'cellnames';
+	my.Cell.prototype.cloneExcludedAttributes = my.mergeArraysUnique(my.Position.prototype.cloneExcludedAttributes, ['copyData', 'pasteData', 'context', 'copy']);
+	my.Cell.prototype.cloneAmendments = function(a, b) {
+		var get = my.xtGet,
+			xt = my.xt;
+		if(!xt(a.start)){
+			a.start = {};
+			a.start.x = get(a.pasteX, a.startX, b.start.x);
+			a.start.y = get(a.pasteY, a.startY, b.start.y);
+		}
+		delete a.startX;
+		delete a.startY;
+		delete a.pasteX;
+		delete a.pasteY;
+		if(!xt(a.handle)){
+			a.handle = {};
+			a.handle.x = get(a.handleX, b.handle.x);
+			a.handle.y = get(a.handleY, b.handle.y);
+		}
+		delete a.handleX;
+		delete a.handleY;
+		if(!xt(a.copy)){
+			a.copy = {};
+			a.copy.x = get(a.copyX, b.copy.x);
+			a.copy.y = get(a.copyY, b.copy.y);
+		}
+		delete a.copyX;
+		delete a.copyY;
+		return a;
+	};
+	my.Cell.prototype.keyAttributeList = my.mergeArraysUnique(my.Position.prototype.keyAttributeList, ['fieldLabel', 'globalAlpha', 'globalCompositeOperation', 'rendered', 'cleared', 'compiled', 'shown', 'compileOrder', 'showOrder', 'backgroundColor']);
 	my.Cell.prototype.defs = {
+			/**
+The coordinate Vector representing the Cell's target position on the &lt;canvas&gt; to which it is to be copied
+
+Cell supports the following 'virtual' attributes for this attribute:
+
+* __startX__ or __pasteX__ - (Number) the x coordinate on the destination &lt;canvas&gt;
+* __startY__ or __pasteY__ - (Number) the y coordinate on the destination &lt;canvas&gt;
+
+@property start
+@type Vector
+**/
 		/**
 PADNAME of the Pad object to which this Cell belongs
 @property pad
@@ -4956,7 +4966,6 @@ Local source data
 @default false
 @private
 **/
-		copyData: false,
 		/**
 Local target data
 @property pasteData
@@ -4964,7 +4973,6 @@ Local target data
 @default false
 @private
 **/
-		pasteData: false,
 		/**
 Paste width, in pixels. Determines where, and at what scale, the copied portion of this Cell's &lt;canvas&gt; will appear on the target Cell's &lt;canvas&gt;
 @property pasteWidth
@@ -5107,33 +5115,24 @@ Cell constructor hook function - core module
 @method coreCellInit
 @private
 **/
-	my.Cell.prototype.coreCellInit = function(items) {
-		var temp,
-			context,
-			d = my.Cell.prototype.defs,
-			xt = my.xt,
-			xto = my.xto,
-			get = my.xtGet,
-			vec = my.makeVector,
-			canvas;
-		my.Position.call(this, items); //handles items.start, items.startX, items.startY
-		my.Base.prototype.set.call(this, items);
-		my.canvas[this.name] = items.canvas;
-		canvas = my.canvas[this.name];
-		my.context[this.name] = items.canvas.getContext('2d');
-		my.cell[this.name] = this;
-		my.pushUnique(my.cellnames, this.name);
-		this.pad = get(items.pad, false);
-		temp = my.safeObject(items.copy);
+	my.Cell.prototype.buildVectors = function() {
+		var vec = my.makeVector;
+		this.start = vec({
+			name: this.type + '.' + this.name + '.start'
+		});
+		this.currentStart = vec({
+			name: this.type + '.' + this.name + '.current.start'
+		});
+		this.currentStart.flag = false;
+		this.handle = vec({
+			name: this.type + '.' + this.name + '.handle'
+		});
+		this.currentHandle = vec({
+			name: this.type + '.' + this.name + '.current.handle'
+		});
 		this.copy = vec({
-			x: get(items.copyX, temp.x, 0),
-			y: get(items.copyY, temp.y, 0),
 			name: this.type + '.' + this.name + '.copy'
 		});
-		this.actualWidth = canvas.width;
-		this.actualHeight = canvas.height;
-		this.copyWidth = this.actualWidth;
-		this.copyHeight = this.actualHeight;
 		this.copyData = {
 			x: 0,
 			y: 0,
@@ -5148,65 +5147,75 @@ Cell constructor hook function - core module
 			h: 0,
 			flag: false
 		};
+	my.Cell.prototype.preRegister = function(items){};
+	my.Cell.prototype.register = function(canvas){
+		my.canvas[this.name] = canvas;
+		my.context[this.name] = canvas.getContext('2d');
+		my.cell[this.name] = this;
+		my.pushUnique(my.cellnames, this.name);
+	};
+	my.Cell.prototype.postRegister = function(items){};
+	};
+	my.Cell.prototype.init = function(items) {
+		var temp,
+			context,
+			group,
+			d = my.Cell.prototype.defs,
+			xt = my.xt,
+			xto = my.xto,
+			get = my.xtGet,
+			vec = my.makeVector,
+			canvas;
+
+		items = (Object.prototype.toString.call(items) === '[object Object]') ? items : {};
+		this.makeName(items.name);
+		delete items.name;
+		this.buildVectors();
+		this.addContext(items);
+		this.set(items);
+		this.setKeyAttributes();
+		this.preRegister(items);
+		this.register(items.canvas);
+		this.pad = get(items.pad, false);
+		canvas = my.canvas[this.name];
+		this.actualWidth = canvas.width;
+		this.actualHeight = canvas.height;
+		this.copyWidth = this.actualWidth;
+		this.copyHeight = this.actualHeight;
 		this.pasteWidth = this.actualWidth;
 		this.pasteHeight = this.actualHeight;
-		if (xto(items.pasteX, items.pasteY)) {
-			this.start.x = get(items.pasteX, this.start.x);
-			this.start.y = get(items.pasteY, this.start.y);
-		}
 		if (xto(items.copyWidth, items.copyHeight, items.pasteWidth, items.pasteHeight, items.width, items.height)) {
 			this.copyWidth = get(items.copyWidth, items.width, this.copyWidth);
 			this.copyHeight = get(items.copyHeight, items.height, this.copyHeight);
 			this.pasteWidth = get(items.pasteWidth, items.width, this.pasteWidth);
 			this.pasteHeight = get(items.pasteHeight, items.height, this.pasteHeight);
 		}
-		context = my.makeContext({
-			name: this.name,
-			cell: my.context[this.name]
-		});
-		this.context = context.name;
-		this.flipUpend = get(items.flipUpend, d.flipUpend);
-		this.flipReverse = get(items.flipReverse, d.flipReverse);
-		this.lockX = get(items.lockX, d.lockX);
-		this.lockY = get(items.lockY, d.lockY);
-		this.roll = get(items.roll, d.roll);
-		this.rendered = get(items.rendered, true);
-		this.cleared = get(items.cleared, true);
-		this.compiled = get(items.compiled, true);
-		this.shown = get(items.shown, true);
-		this.compileOrder = get(items.compileOrder, 0);
-		this.showOrder = get(items.showOrder, 0);
-		this.backgroundColor = get(items.backgroundColor, 'rgba(0,0,0,0)');
-		this.globalCompositeOperation = get(items.globalCompositeOperation, 'source-over');
-		this.globalAlpha = get(items.globalAlpha, 1);
 		this.groups = (xt(items.groups)) ? [].concat(items.groups) : []; //must be set
 		this.setDimensionsFlag = true;
 		this.sortGroupsFlag = true;
 		this.dirtyHandlesFlag = true;
 		this.dirtyStartsFlag = true;
-		my.makeGroup({
+		group = my.makeGroup({
 			name: this.name,
 			cell: this.name
 		});
+		this.groups.push(group.name);
+		this.postRegister(items);
+		return items;
 	};
-	/**
-Cell constructor hook function - modified by collisions extension
-@method collisionsCellInit
-@private
-**/
-	my.Cell.prototype.collisionsCellInit = function(items) {};
-	/**
-Cell constructor hook function - modified by animation extension
-@method animationCellInit
-@private
-**/
-	my.Cell.prototype.animationCellInit = function(items) {};
+	my.Cell.prototype.addContext = function(items){
+		var context = my.makeContext({
+			name: this.name,
+			cell: my.context[this.name]
+		});
+		this.context = context.name;
+	};
 	my.Cell.prototype.get = function(item) {
 		var undef,
 			g = this.getters[item],
 			d, i;
 		if (g) {
-			return g();
+			return g.call(this);
 		}
 		else{
 			d = this.defs[item];
@@ -5215,7 +5224,10 @@ Cell constructor hook function - modified by animation extension
 				return (typeof i !== 'undefined') ? i : d;
 			}
 			else {
-				return my.ctx[this.context].get(item);
+				if(my.ctx[this.context]){
+					return my.ctx[this.context].get(item);
+				}
+				return undef;
 			}
 		}
 	};
@@ -6146,16 +6158,10 @@ Default values are:
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 	my.Context = function(items) {
-		items = my.safeObject(items);
-		my.Base.call(this, items);
+		items = this.init(items);
 		if (items.cell) {
 			this.getContextFromEngine(items.cell);
 		}
-		else {
-			this.set(items);
-		}
-		my.ctx[this.name] = this;
-		my.pushUnique(my.ctxnames, this.name);
 		return this;
 	};
 	my.Context.prototype = Object.create(my.Base.prototype);
@@ -6166,7 +6172,8 @@ Default values are:
 @final
 **/
 	my.Context.prototype.type = 'Context';
-	my.Context.prototype.classname = 'ctxnames';
+	my.Context.prototype.lib = 'ctx';
+	my.Context.prototype.libName = 'ctxnames';
 	my.Context.prototype.defs = {
 		/**
 Color, gradient or pattern used to fill a entity. Can be:
@@ -6518,64 +6525,8 @@ Compares an entity's context engine values (held in this context object) to thos
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 	my.Group = function(items) {
-		var get = my.xtGet,
-		pu = my.pushUnique;
-		items = my.safeObject(items);
-		my.Base.call(this, items);
-		/**
-Array of SPRITENAME Strings of entitys that comprise this Group
-@property entitys
-@type Array
-@default []
-**/
-		this.entitys = (my.xt(items.entitys)) ? [].concat(items.entitys) : [];
-		/**
-CELLNAME of the default Cell object to which this group is associated
-@property cell
-@type String
-@default ''
-**/
-		this.cell = items.cell || my.pad[my.work.currentPad].current;
-		/**
-Group order value - lower order Groups are drawn on &lt;canvas&gt; elements before higher order Groups
-@property order
-@type Number
-@default 0
-**/
-		this.order = get(items.order, 0);
-		/**
-Resort flag
-@property resort
-@type Boolean
-@default false
-@private
-**/
+		items = this.init(items);
 		this.resort = true;
-		/**
-Visibility flag - Group entitys will (in general) not be drawn on a &lt;canvas&gt; element when this flag is set to false
-@property visibility
-@type Boolean
-@default true
-**/
-		this.visibility = get(items.visibility, true);
-		/**
-Sorting flag - when set to true, Groups will sort their constituent entity object according to their entity.order attribute for each iteration of the display cycle
-@property entitySort
-@type Boolean
-@default true
-**/
-		this.entitySort = get(items.entitySort, true);
-		/**
-Collision checking radius, in pixels - as a first step in a collision check, the Group will winnow potential collisions according to how close the checked entity is to the current reference entity or mouse coordinate; when set to 0, this collision check step is skipped and all entitys move on to the next step
-@property regionRadius
-@type Number
-@default 0
-**/
-		this.regionRadius = get(items.regionRadius, 0);
-		this.multifiltersGroupInit(items);
-		my.group[this.name] = this;
-		pu(my.groupnames, this.name);
-		pu(my.cell[this.cell].groups, this.name);
 		return this;
 	};
 	my.Group.prototype = Object.create(my.Base.prototype);
@@ -6586,21 +6537,72 @@ Collision checking radius, in pixels - as a first step in a collision check, the
 @final
 **/
 	my.Group.prototype.type = 'Group';
-	my.Group.prototype.classname = 'groupnames';
+	my.Group.prototype.lib = 'group';
+	my.Group.prototype.libName = 'groupnames';
 	my.Group.prototype.defs = {
+		/**
+Array of SPRITENAME Strings of entitys that comprise this Group
+@property entitys
+@type Array
+@default []
+**/
 		entitys: [],
+		/**
+CELLNAME of the default Cell object to which this group is associated
+@property cell
+@type String
+@default ''
+**/
 		cell: '',
+		/**
+Group order value - lower order Groups are drawn on &lt;canvas&gt; elements before higher order Groups
+@property order
+@type Number
+@default 0
+**/
 		order: 0,
-		visibility: true,
-		entitySort: true,
+		/**
+Resort flag
+@property resort
+@type Boolean
+@default false
+@private
+**/
 		resort: false,
+		/**
+Visibility flag - Group entitys will (in general) not be drawn on a &lt;canvas&gt; element when this flag is set to false
+@property visibility
+@type Boolean
+@default true
+**/
+		visibility: true,
+		/**
+Sorting flag - when set to true, Groups will sort their constituent entity object according to their entity.order attribute for each iteration of the display cycle
+@property entitySort
+@type Boolean
+@default true
+**/
+		entitySort: true,
+		/**
+Collision checking radius, in pixels - as a first step in a collision check, the Group will winnow potential collisions according to how close the checked entity is to the current reference entity or mouse coordinate; when set to 0, this collision check step is skipped and all entitys move on to the next step
+@property regionRadius
+@type Number
+@default 0
+**/
 		regionRadius: 0
 	};
 	my.mergeInto(my.Group.prototype.defs, my.Base.prototype.defs);
+	my.Group.prototype.keyAttributeList = my.mergeArraysUnique(my.Base.prototype.keyAttributeList, ['entitys', 'cell', 'order', 'resort', 'visibility', 'entitySort', 'regionRadius']);
 	my.Group.prototype.multifiltersGroupInit = function() {};
 	my.Group.prototype.getters = {};
 	my.mergeInto(my.Group.prototype.getters, my.Base.prototype.getters);
 	my.Group.prototype.setters = {
+		entitys: function(item){
+			this.entitys = (my.xt(item)) ? [].concat(items.entitys) : [];
+		},
+		cell: function(item){
+			this.cell = item || my.pad[my.work.currentPad].current;
+		},
 		order: function(item){
 			this.order = item;
 			my.cell[this.cell].sortGroupsFlag = true;
@@ -7028,56 +7030,50 @@ __Scrawl core does not include any entity type constructors.__ Each entity type 
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 	my.Entity = function(items) {
-		var get = my.xtGet;
-		items = my.safeObject(items);
-		my.Position.call(this, items);
+		return this;
+	};
+	my.Entity.prototype = Object.create(my.Position.prototype);
+	/**
+@property type
+@type String
+@default 'Entity'
+@final
+**/
+	my.Entity.prototype.type = 'Entity';
+	my.Entity.prototype.lib = 'entity';
+	my.Entity.prototype.libName = 'entitynames';
+	my.Entity.prototype.addContext = function(items){
 		items.name = this.name;
-		var myContext = my.makeContext(items);
-		/**
-CTXNAME of this Entity's Context object
-@property context
-@type String
-@default ''
-@private
-**/
-		this.context = myContext.name;
-		/**
-GROUPNAME String for this entity's default group
-
-_Note: a entity can belong to more than one group by being added to other Group objects via the __scrawl.addEntitysToGroups()__ and __Group.addEntityToGroup()__ functions_
-@property group
-@type String
-@default ''
-**/
+		var context = my.makeContext({
+			name: this.name,
+			cell: my.context[this.name]
+		});
+		this.context = context.name;
+		delete items.name;
+	};
+	my.Entity.prototype.preRegister = function(items){
+		// var myContext;
+		// items.name = this.name;
+		// myContext = my.makeContext(items);
+		// this.context = myContext.name;
 		this.group = this.getGroup(items);
-		/**
-Display cycle flag; if set to true, entity will not change the &lt;canvas&gt; element's context engine's settings before drawing itself on the cell
-@property fastStamp
-@type Boolean
-@default false
-**/
-		this.fastStamp = get(items.fastStamp, false);
-		/**
-Scaling flag; set to true to ensure lineWidth scales in line with the scale attribute value
-@property scaleOutline
-@type Boolean
-@default true
-**/
-		this.scaleOutline = get(items.scaleOutline, true);
+		my.group[this.group].addEntitysToGroup(this.name);
+	}
+	my.Entity.prototype.defs = {
 		/**
 Entity order value - lower order entitys are drawn on &lt;canvas&gt; elements before higher order entitys
 @property order
 @type Number
 @default 0
 **/
-		this.order = get(items.order, 0);
+		order: 0,
 		/**
 Visibility flag - entitys will (in general) not be drawn on a &lt;canvas&gt; element when this flag is set to false
 @property visibility
 @type Boolean
 @default true
 **/
-		this.visibility = get(items.visibility, true);
+		visibility: true,
 		/**
 Entity drawing method. An entity can be drawn onto a &lt;canvas&gt; element in a variety of ways; these methods include:
 
@@ -7097,23 +7093,6 @@ _Note: not all entitys support all of these operations_
 @type String
 @default 'fill'
 **/
-		this.method = get(items.method, my[this.type].prototype.defs.method);
-		this.collisionsEntityConstructor(items);
-		this.multifiltersEntityInit(items);
-		return this;
-	};
-	my.Entity.prototype = Object.create(my.Position.prototype);
-	/**
-@property type
-@type String
-@default 'Entity'
-@final
-**/
-	my.Entity.prototype.type = 'Entity';
-	my.Entity.prototype.classname = 'entitynames';
-	my.Entity.prototype.defs = {
-		order: 0,
-		visibility: true,
 		method: 'fill',
 		/**
 Current SVGTiny data string for the entity (only supported by Path and Shape entitys)
@@ -7121,20 +7100,46 @@ Current SVGTiny data string for the entity (only supported by Path and Shape ent
 @type String
 @default ''
 **/
-		data: '',
 		/**
 Entity radius, in pixels - not supported by all entity objects
 @property radius
 @type Number
 @default 0
 **/
-		radius: 0,
+		/**
+Scaling flag; set to true to ensure lineWidth scales in line with the scale attribute value
+@property scaleOutline
+@type Boolean
+@default true
+**/
 		scaleOutline: true,
+		/**
+Display cycle flag; if set to true, entity will not change the &lt;canvas&gt; element's context engine's settings before drawing itself on the cell
+@property fastStamp
+@type Boolean
+@default false
+**/
 		fastStamp: false,
-		context: '',
+		/**
+CTXNAME of this Entity's Context object
+@property context
+@type String
+@default ''
+@private
+**/
+		/**
+GROUPNAME String for this entity's default group
+
+_Note: a entity can belong to more than one group by being added to other Group objects via the __scrawl.addEntitysToGroups()__ and __Group.addEntityToGroup()__ functions_
+@property group
+@type String
+@default ''
+**/
 		group: ''
 	};
 	my.mergeInto(my.Entity.prototype.defs, my.Position.prototype.defs);
+	my.Entity.prototype.cloneExcludedAttributes = my.mergeArraysUnique(my.Position.prototype.cloneExcludedAttributes, ['context']);
+	my.Entity.prototype.keyAttributeList = my.mergeArraysUnique(my.Position.prototype.keyAttributeList, ['order', 'visibility', 'method', 'scaleOutline', 'fastStamp', 'group']);
 	/**
 Entity constructor hook function - modified by multifilters extension
 @method multifiltersEntityInit
@@ -7148,26 +7153,6 @@ Entity constructor hook function - modified by collisions extension
 **/
 	my.Entity.prototype.collisionsEntityConstructor = function(items) {};
 	/**
-Constructor helper function - register entity object in the scrawl library
-@method registerInLibrary
-@return This
-@chainable
-@private
-**/
-	my.Entity.prototype.registerInLibrary = function(items) {
-		my.entity[this.name] = this;
-		my.pushUnique(my.entitynames, this.name);
-		my.group[this.group].addEntitysToGroup(this.name);
-		this.collisionsEntityRegisterInLibrary(items);
-		return this;
-	};
-	/**
-Entity.registerInLibrary hook function - modified by collisions extension
-@method collisionsEntityRegisterInLibrary
-@private
-**/
-	my.Entity.prototype.collisionsEntityRegisterInLibrary = function() {};
-	/**
 Augments Position.get()
 
 Allows users to retrieve a entity's Context object's values via the entity
@@ -7180,7 +7165,7 @@ Allows users to retrieve a entity's Context object's values via the entity
 			g = this.getters[item],
 			d, i;
 		if (g) {
-			return g();
+			return g.call(this);
 		}
 		else{
 			d = this.defs[item];
@@ -7258,7 +7243,7 @@ Allows users to:
 			s = setters[s],
 			item = items[key];
 			if(s){
-				s(item);
+				s.call(this, item);
 			}
 			else if (typeof d[key] !== 'undefined') {
 				current = this[key];
@@ -7283,31 +7268,6 @@ Allows users to:
 	};
 	my.Entity.prototype.deltaSetters = {};
 	my.mergeInto(my.Entity.prototype.deltaSetters, my.Position.prototype.deltaSetters);
-	/**
-Augments Position.clone()
-@method clone
-@param {Object} items Object consisting of key:value attributes, used to update the clone's attributes with new values
-@return Cloned object
-@chainable
-**/
-	my.Entity.prototype.clone = function(items) {
-		var context,
-			enhancedItems,
-			clone,
-			i, iz;
-		items = my.safeObject(items);
-		context = JSON.parse(JSON.stringify(my.ctx[this.context]));
-		delete context.name;
-		enhancedItems = my.mergeInto(items, context);
-		delete enhancedItems.context;
-		clone = my.Position.prototype.clone.call(this, enhancedItems);
-		if (my.xt(items.createNewContext) && !items.createNewContext) {
-			delete my.ctx[clone.context];
-			my.removeItem(my.ctxnames, clone.context);
-			clone.context = this.context;
-		}
-		return clone;
-	};
 	/**
 Constructor helper function - discover this entity's default group affiliation
 @method getGroup
@@ -7836,14 +7796,6 @@ Either the 'tests' attribute should contain a Vector, or an array of vectors, or
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 	my.Design = function(items) {
-		my.Base.call(this, items);
-		/**
-Drawing flag - when set to 'entity' (or true), will use entity-based coordinates to calculate the start and end points of the gradient; when set to 'cell' (or false - default), will use Cell-based coordinates
-@property lockTo
-@type String - or alternatively Boolean
-@default 'cell'
-**/
-		this.lockTo = my.xtGet(items.lockTo, my[this.type].prototype.defs.lockTo);
 		return this;
 	};
 	my.Design.prototype = Object.create(my.Base.prototype);
@@ -7854,7 +7806,8 @@ Drawing flag - when set to 'entity' (or true), will use entity-based coordinates
 @final
 **/
 	my.Design.prototype.type = 'Design';
-	my.Design.prototype.classname = 'designnames';
+	my.Design.prototype.lib = 'object';
+	my.Design.prototype.libName = 'objectnames';
 	my.Design.prototype.defs = {
 		/**
 Array of JavaScript Objects representing color stop data
@@ -7874,6 +7827,12 @@ Objects take the form {color:String, stop:Number} where:
 			color: 'white',
 			stop: 0.999999
         }],
+		/**
+Drawing flag - when set to 'entity' (or true), will use entity-based coordinates to calculate the start and end points of the gradient; when set to 'cell' (or false - default), will use Cell-based coordinates
+@property lockTo
+@type String - or alternatively Boolean
+@default 'cell'
+**/
 		lockTo: 'cell',
 		/**
 Drawing flag - when set to true, force the gradient to update each drawing cycle - only required in the simplest scenes where fillStyle and strokeStyle do not change between entities
@@ -7919,6 +7878,7 @@ Vertical end coordinate, in pixels, from the top-left corner of the gradient's &
 		endY: 0
 	};
 	my.mergeInto(my.Design.prototype.defs, my.Base.prototype.defs);
+	my.Design.prototype.keyAttributeList = my.mergeArraysUnique(my.Base.prototype.keyAttributeList, ['color', 'lockTo', 'autoUpdate', 'cell', 'startX', 'startY', 'endX', 'endY']);
 	my.Design.prototype.getters = {};
 	my.mergeInto(my.Design.prototype.getters, my.Base.prototype.getters);
 	my.Design.prototype.setters = {
@@ -8242,11 +8202,7 @@ Remove this gradient from the scrawl library
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 	my.Gradient = function(items) {
-		items = my.safeObject(items);
-		my.Design.call(this, items);
-		my.Base.prototype.set.call(this, items);
-		my.design[this.name] = this;
-		my.pushUnique(my.designnames, this.name);
+		this.init(items);
 		return this;
 	};
 	my.Gradient.prototype = Object.create(my.Design.prototype);
@@ -8257,9 +8213,11 @@ Remove this gradient from the scrawl library
 @final
 **/
 	my.Gradient.prototype.type = 'Gradient';
-	my.Gradient.prototype.classname = 'designnames';
+	my.Gradient.prototype.lib = 'design';
+	my.Gradient.prototype.libName = 'designnames';
 	my.Gradient.prototype.defs = {};
 	my.mergeInto(my.Gradient.prototype.defs, my.Design.prototype.defs);
+	my.Gradient.prototype.keyAttributeList = my.mergeArraysUnique(my.Design.prototype.keyAttributeList, []);
 	my.Gradient.prototype.getters = {};
 	my.mergeInto(my.Gradient.prototype.getters, my.Design.prototype.getters);
 	my.Gradient.prototype.setters = {};
@@ -8289,11 +8247,7 @@ Remove this gradient from the scrawl library
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 	my.RadialGradient = function(items) {
-		items = my.safeObject(items);
-		my.Design.call(this, items);
-		my.Base.prototype.set.call(this, items);
-		my.design[this.name] = this;
-		my.pushUnique(my.designnames, this.name);
+		this.init(items);
 		return this;
 	};
 	my.RadialGradient.prototype = Object.create(my.Design.prototype);
@@ -8304,7 +8258,8 @@ Remove this gradient from the scrawl library
 @final
 **/
 	my.RadialGradient.prototype.type = 'RadialGradient';
-	my.RadialGradient.prototype.classname = 'designnames';
+	my.RadialGradient.prototype.lib = 'design';
+	my.RadialGradient.prototype.libName = 'designnames';
 	my.RadialGradient.prototype.defs = {
 		/**
 Start circle radius, in pixels or percentage of entity/cell width
@@ -8322,6 +8277,7 @@ End circle radius, in pixels or percentage of entity/cell width
 		endRadius: 0
 	};
 	my.mergeInto(my.RadialGradient.prototype.defs, my.Design.prototype.defs);
+	my.RadialGradient.prototype.keyAttributeList = my.mergeArraysUnique(my.Design.prototype.keyAttributeList, ['startRadius', 'endRadius']);
 	my.RadialGradient.prototype.getters = {};
 	my.mergeInto(my.RadialGradient.prototype.getters, my.Design.prototype.getters);
 	my.RadialGradient.prototype.setters = {
@@ -8527,22 +8483,9 @@ Starts the animation loop
 **/
 	my.Animation = function(items) {
 		var delay;
-		my.Base.call(this, items);
-		items = my.safeObject(items);
+		items = this.init(items);
 		delay = (my.isa_bool(items.delay)) ? items.delay : false;
-		this.fn = items.fn || function() {};
-		this.order = items.order || 0;
-		my.animation[this.name] = this;
-		my.pushUnique(my.animationnames, this.name);
 		my.work.resortAnimations = true;
-		/**
-Pseudo-attribute used to prevent immediate running of animation when first created
-
-_This attribute is not retained by the Animation object_
-@property delay
-@type Boolean
-@default false
-**/
 		if (!delay) {
 			this.run();
 		}
@@ -8556,7 +8499,8 @@ _This attribute is not retained by the Animation object_
 @final
 **/
 	my.Animation.prototype.type = 'Animation';
-	my.Animation.prototype.classname = 'animationnames';
+	my.Animation.prototype.lib = 'animation';
+	my.Animation.prototype.libName = 'animationnames';
 	my.Animation.prototype.defs = {
 		/**
 Anonymous function for an animation routine
@@ -8572,8 +8516,17 @@ Lower order animations are run during each frame before higher order ones
 @default 0
 **/
 		order: 0,
+		/**
+Pseudo-attribute used to prevent immediate running of animation when first created
+
+_This attribute is not retained by the Animation object_
+@property delay
+@type Boolean
+@default false
+**/
 	};
 	my.mergeInto(my.Animation.prototype.defs, my.Base.prototype.defs);
+	my.Animation.prototype.keyAttributeList = my.mergeArraysUnique(my.Base.prototype.keyAttributeList, ['fn', 'order']);
 	my.Animation.prototype.getters = {};
 	my.mergeInto(my.Animation.prototype.getters, my.Base.prototype.getters);
 	my.Animation.prototype.setters = {};

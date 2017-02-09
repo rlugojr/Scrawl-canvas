@@ -87,15 +87,9 @@ A __factory__ function to generate new Block entitys
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 		my.Block = function Block(items) {
-			var get = my.xtGet,
-			d = my.Block.prototype.defs;
-			items = my.safeObject(items);
-			my.Entity.call(this, items);
-			this.width = get(items.width, d.width);
-			this.height = get(items.height, d.height);
-			this.setLocalDimensions();
-			this.registerInLibrary();
-			my.pushUnique(my.group[this.group].entitys, this.name);
+			this.init(items);
+			// this.setLocalDimensions();
+			this.setLocalDimensionsFlag = true;
 			return this;
 		};
 		my.Block.prototype = Object.create(my.Entity.prototype);
@@ -115,7 +109,6 @@ Block display - width, in pixels
 @default 0
 @private
 **/
-			localWidth: 0,
 			/**
 Block display - height, in pixels
 @property localHeight
@@ -123,22 +116,21 @@ Block display - height, in pixels
 @default 0
 @private
 **/
-			localHeight: 0,
 		};
 		my.mergeInto(my.Block.prototype.defs, my.Entity.prototype.defs);
 		my.Block.prototype.getters = {};
 		my.mergeInto(my.Block.prototype.getters, my.Entity.prototype.getters);
 		my.Block.prototype.setters = {
 			width: function(item){
-				my.Entity.prototype.setters.width(item);
+				my.Entity.prototype.setters.width.call(this, item);
 				this.setLocalDimensionsFlag = true;
 			},
 			height: function(item){
-				my.Entity.prototype.setters.height(item);
+				my.Entity.prototype.setters.height.call(this, item);
 				this.setLocalDimensionsFlag = true;
 			},
 			scale: function(item){
-				my.Entity.prototype.setters.scale(item);
+				my.Entity.prototype.setters.scale.call(this, item);
 				this.setLocalDimensionsFlag = true;
 			},
 		};

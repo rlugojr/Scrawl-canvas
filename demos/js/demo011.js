@@ -49,7 +49,7 @@ var mycode = function() {
 scrawl.loadExtensions({
 	path: '../source/',
 	minified: false,
-	extensions: ['wheel', 'animation'],
+	extensions: ['wheel'],
 	callback: function() {
 		window.addEventListener('load', function() {
 			scrawl.init();
