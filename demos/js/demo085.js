@@ -63,6 +63,10 @@ var mycode = function() {
 	document.getElementById('cellgrad_endRad').value = 400;
 	document.getElementById('entitygrad_startRad').value = 0;
 	document.getElementById('entitygrad_endRad').value = 80;
+	document.getElementById('cellgrad_startRad_rel').value = 50;
+	document.getElementById('cellgrad_endRad_rel').value = 50;
+	document.getElementById('entitygrad_startRad_rel').value = 50;
+	document.getElementById('entitygrad_endRad_rel').value = 50;
 
 
 	//code here
@@ -316,6 +320,18 @@ var mycode = function() {
 				break;
 			case 'entitygrad_endRad':
 				entityGradItems.endRadius = Math.round(e.target.value);
+				break;
+			case 'cellgrad_startRad_rel':
+				cellGradItems.startRadius = e.target.value + '%';
+				break;
+			case 'cellgrad_endRad_rel':
+				cellGradItems.endRadius = e.target.value + '%';
+				break;
+			case 'entitygrad_startRad_rel':
+				entityGradItems.startRadius = e.target.value + '%';
+				break;
+			case 'entitygrad_endRad_rel':
+				entityGradItems.endRadius = e.target.value + '%';
 				break;
 		}
 		if (Object.keys(cellBlockItems).length) {

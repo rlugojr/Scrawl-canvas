@@ -223,15 +223,17 @@ set helper function
 @private
 **/
 		my.Wheel.prototype.setRadius = function(item) {
-			var cell;
+			var cell, r = 0;
 			if (item.toFixed) {
-				return item;
+				r = item;
 			}
-			cell = my.cell[my.group[this.group].cell];
-			if (my.xt(cell, cell.actualWidth)) {
-				return (parseFloat(item) / 100) * cell.actualWidth;
+			else{
+				cell = my.cell[my.group[this.group].cell];
+				if (my.xt(cell, cell.actualWidth)) {
+					r = (parseFloat(item) / 100) * cell.actualWidth;
+				}
 			}
-			return 0;
+			return r;
 		};
 		/**
 get the current radius value, in pixels
@@ -330,6 +332,7 @@ Stamp helper function - define the entity's path on the &lt;canvas&gt; element's
 			if(this.localRadiusFlag){
 				this.localRadiusFlag = false;
 				this.localRadius = this.setRadius(this.radius);
+				this.width = this.height = this.localRadius * 2;
 				this.localCheckHitRadius = this.setRadius(this.checkHitRadius);
 			}
 			this.rotateCell(ctx, cell);

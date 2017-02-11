@@ -2561,6 +2561,9 @@ Note that any callback or fn attribute functions will be referenced by the clone
 	my.Base.prototype.cloneAmendments = function(a, b) {
 		return a;
 	};
+	my.Base.prototype.postCloneUpdates = function(items) {
+		return this;
+	};
 	my.Base.prototype.clone = function(items) {
 		items = (Object.prototype.toString.call(items) === '[object Object]') ? items : {};
 		var clone, current, i, iz,
@@ -2584,6 +2587,7 @@ Note that any callback or fn attribute functions will be referenced by the clone
 				items = my.mergeInto(items, current);
 			}
 			clone.set(items);
+			clone = this.postCloneUpdates.call(clone, items);
 		}
 		return clone;
 	};
@@ -3420,6 +3424,9 @@ updateCurrentHandle helper object
 		},
 		Block: function(reference) {
 			var scale = reference.scale;
+			if(!(my.xt(reference.localWidth))){
+				reference.setLocalDimensions();
+			}
 			return {
 				w: reference.localWidth / scale,
 				h: reference.localHeight / scale,
@@ -6479,8 +6486,10 @@ Compares an entity's context engine values (held in this context object) to thos
 			else{
 				d = my.design[currentE];
 				if(d){
-					if (currentC === currentE && d.autoUpdate) {
-						result[k] = currentE;
+					if (currentC === currentE) {
+						if (d.autoUpdate || d.lockTo !== 'cell') {
+							result[k] = currentE;
+						}
 					}
 					else if(currentC !== currentE){
 						result[k] = currentE
@@ -7052,10 +7061,6 @@ __Scrawl core does not include any entity type constructors.__ Each entity type 
 		delete items.name;
 	};
 	my.Entity.prototype.preRegister = function(items){
-		// var myContext;
-		// items.name = this.name;
-		// myContext = my.makeContext(items);
-		// this.context = myContext.name;
 		this.group = this.getGroup(items);
 		my.group[this.group].addEntitysToGroup(this.name);
 	}
@@ -7094,18 +7099,6 @@ _Note: not all entitys support all of these operations_
 @default 'fill'
 **/
 		method: 'fill',
-		/**
-Current SVGTiny data string for the entity (only supported by Path and Shape entitys)
-@property data
-@type String
-@default ''
-**/
-		/**
-Entity radius, in pixels - not supported by all entity objects
-@property radius
-@type Number
-@default 0
-**/
 		/**
 Scaling flag; set to true to ensure lineWidth scales in line with the scale attribute value
 @property scaleOutline
@@ -7219,8 +7212,12 @@ Allows users to:
 	my.Entity.prototype.setters = {
 		group: function(item){
 			var group = my.group;
-			if (item !== this.group) {
+			if (this.group && item !== this.group) {
 				group[this.group].removeEntitysFromGroup(this.name);
+				this.group = this.getGroup(item);
+				group[this.group].addEntitysToGroup(this.name);
+			}
+			else{
 				this.group = this.getGroup(item);
 				group[this.group].addEntitysToGroup(this.name);
 			}
@@ -8058,6 +8055,7 @@ Design.update() helper function - builds &lt;canvas&gt; element's contenxt engin
 			if (ey.substring) {
 				ey = (parseFloat(ey) / 100) * h;
 			}
+			console.log(this.name, w, h, sx, sy, ex, ey);
 			if (this.type === 'Gradient') {
 				g = ctx.createLinearGradient(sx - x, sy - y, ex - x, ey - y);
 			}

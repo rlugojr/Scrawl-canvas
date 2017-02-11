@@ -94,28 +94,8 @@ A __factory__ function to generate new Phrase entitys
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 		my.Phrase = function Phrase(items) {
-			var d = this.defs,
-				get = my.xtGet;
-			items = my.safeObject(items);
-			my.Entity.call(this, items);
-			this.text = get(items.text , d.text);
-			this.style = get(items.style , d.style);
-			this.variant = get(items.variant , d.variant);
-			this.weight = get(items.weight , d.weight);
-			this.size = get(items.size , d.size);
-			this.metrics = get(items.metrics , d.metrics);
-			this.family = get(items.family , d.family);
-			this.lineHeight = get(items.lineHeight , d.lineHeight);
-			this.textAlongPath = get(items.textAlongPath , d.textAlongPath);
-			this.fixedWidth = get(items.fixedWidth , d.fixedWidth);
-			this.registerInLibrary();
+			items = this.init(items);
 			this.texts = [];
-			if (items.font) {
-				this.checkFont(items.font);
-			}
-			else {
-				this.constructFontFlag = true;
-			}
 			this.getMetricsFlag = true;
 			this.multilineFlag = true;
 			return this;
@@ -128,7 +108,7 @@ A __factory__ function to generate new Phrase entitys
 @final
 **/
 		my.Phrase.prototype.type = 'Phrase';
-		my.Phrase.prototype.classname = 'entitynames';
+		// my.Phrase.prototype.classname = 'entitynames';
 		my.Phrase.prototype.defs = {
 			/**
 Text string to be displayed - for multiline text, insert __\n__ where the text line breaks
@@ -215,10 +195,21 @@ Users should never interfere with Text objects, as they are destroyed and recrea
 @default []
 @private
 **/
-			texts: [],
+			// texts: [],
 		};
 		my.mergeInto(my.Phrase.prototype.defs, my.Entity.prototype.defs);
-		my.Phrase.prototype.getters = {};
+		my.Phrase.prototype.keyAttributeList = my.mergeArraysUnique(my.Entity.prototype.keyAttributeList, ['text', 'style', 'variant', 'weight', 'size', 'metrics', 'family', 'lineHeight', 'textAlongPath', 'fixedWidth']);
+		my.Phrase.prototype.postCloneUpdates = function(items) {
+			if(items.font){
+				this.checkFont(items.font);
+			}
+			return this;
+		};
+		my.Phrase.prototype.getters = {
+			font: function(){
+				return my.ctx[this.context].get('font');
+			}
+		};
 		my.mergeInto(my.Phrase.prototype.getters, my.Entity.prototype.getters);
 		my.Phrase.prototype.setters = {
 			text: function(item){
@@ -240,11 +231,17 @@ Users should never interfere with Text objects, as they are destroyed and recrea
 				this.getMetricsFlag = true;
 			},
 			font: function(item){
-				this.font = item;
-				this.checkFont(item);
-				this.currentHandle.flag = false;
-				this.multilineFlag = true;
-				this.getMetricsFlag = true;
+				var ctx;
+				if(this.context){
+					ctx = my.ctx[this.context];
+					if(ctx){
+						ctx.set({font: item});
+						this.checkFont(item);
+						this.currentHandle.flag = false;
+						this.multilineFlag = true;
+						this.getMetricsFlag = true;
+					}
+				}
 			},
 			style: function(item){
 				this.style = item;
@@ -336,8 +333,12 @@ Helper function - creates Text objects for each line of text in a multiline Phra
 					delete my.text[texts[i]];
 					ri(textnames, texts[i]);
 				}
+				texts.length = 0;
 			}
-			texts.length = 0;
+			else{
+				this.texts = [];
+				texts = this.texts;
+			}
 			items.phrase = this.name;
 			for (j = 0, jz = textArray.length; j < jz; j++) {
 				items.text = textArray[j];
@@ -383,16 +384,16 @@ Helper function - creates font-related attributes from entity's Context object's
 				weight,
 				size,
 				metrics,
-				family,
-				d = my.Phrase.prototype.defs,
-				get = my.xtGet;
-			myFont = my.ctx[this.context].font;
-			style = get(this.style, d.style);
-			variant = get(this.variant, d.variant);
-			weight = get(this.weight, d.weight);
-			size = get(this.size, d.size);
-			metrics = get(this.metrics, d.metrics);
-			family = get(this.family, d.family);
+				family;
+				// d = my.Phrase.prototype.defs,
+				// get = my.xtGet;
+			myFont = this.get('font');
+			style = this.get('style');
+			variant = this.get('variant');
+			weight = this.get('weight');
+			size = this.get('size');
+			metrics = this.get('metrics');
+			family = this.get('family');
 			if (/italic/i.test(myFont)) {
 				style = 'italic';
 			}
@@ -499,15 +500,15 @@ Helper function - creates entity's Context object's phrase attribute from other 
 				size,
 				metrics,
 				family,
-				get = my.xtGet,
-				d = this.defs;
+				scale;
 			myFont = '';
-			style = get(this.style, d.style);
-			variant = get(this.variant, d.variant);
-			weight = get(this.weight, d.weight);
-			size = get(this.size, d.size);
-			metrics = get(this.metrics, d.metrics);
-			family = get(this.family, d.family);
+			style = this.get('style');
+			variant = this.get('variant');
+			weight = this.get('weight');
+			size = this.get('size');
+			metrics = this.get('metrics');
+			family = this.get('family');
+			scale = this.get('scale');
 			if (style !== 'normal') {
 				myFont += style + ' ';
 			}
@@ -517,7 +518,7 @@ Helper function - creates entity's Context object's phrase attribute from other 
 			if (weight !== 'normal') {
 				myFont += weight + ' ';
 			}
-			myFont += (size * this.scale) + metrics + ' ';
+			myFont += (size * scale) + metrics + ' ';
 			myFont += family;
 			my.ctx[this.context].font = myFont;
 			return this;
@@ -904,22 +905,12 @@ Returns an object with coordinates __x__ and __y__
 @private
 **/
 		my.Text = function Text(items) {
-			var get = my.xtGet,
-				pu = my.pushUnique,
-				d = my.Text.prototype.defs,
-				e;
-			items = my.safeObject(items);
-			my.Base.call(this, items);
-			this.text = get(items.text, d.text);
-			this.phrase = get(items.phrase, d.phrase);
+			var e;
+			items = this.init(items);
 			e = my.entity[this.phrase];
 			this.context = e.context;
-			this.fixedWidth = get(items.fixedWidth, d.fixedWidth);
-			this.textAlongPath = get(items.textAlongPath, d.textAlongPath);
 			this.glyphs = [];
 			this.glyphWidths = [];
-			my.text[this.name] = this;
-			my.pushUnique(my.textnames, this.name);
 			my.pushUnique(e.texts, this.name);
 			this.getMetrics();
 			return this;
@@ -932,7 +923,8 @@ Returns an object with coordinates __x__ and __y__
 @final
 **/
 		my.Text.prototype.type = 'Text';
-		my.Text.prototype.classname = 'textnames';
+		my.Text.prototype.lib = 'text';
+		my.Text.prototype.libName = 'textnames';
 		my.Text.prototype.defs = {
 			/**
 Text to be displayed
@@ -957,7 +949,7 @@ CTXNAME String of parent Phrase object's Context object
 @default ''
 @private
 **/
-			context: '',
+			// context: '',
 			/**
 fixedWidth value of parent Phrase object
 @property fixedWidth
@@ -1008,6 +1000,7 @@ Glyph widths array
 			glyphWidths: [],
 		};
 		my.mergeInto(my.Text.prototype.defs, my.Base.prototype.defs);
+		my.Text.prototype.keyAttributeList = my.mergeArraysUnique(my.Entity.prototype.keyAttributeList, ['text', 'phrase', 'fixedWidth', 'textAlongPath', 'width', 'height']);
 		my.Text.prototype.getters = {};
 		my.mergeInto(my.Text.prototype.getters, my.Base.prototype.getters);
 		my.Text.prototype.setters = {};

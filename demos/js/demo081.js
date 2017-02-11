@@ -137,6 +137,7 @@ var mycode = function() {
 	scrawl.makePhrase({
 		pivot: 'box1',
 		text: 'Cell gradient',
+		font: '18px Arial, sans-serif',
 		handleX: -20,
 		handleY: -20,
 	}).clone({

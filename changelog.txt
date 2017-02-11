@@ -31,6 +31,19 @@ Currently known bugs
 
 CHANGE LOG
 ------------------------------------------------------------------------------------
+to 170211
+	- refactoring
+		- refactoring all setters
+		- refactoring all constructors and clone functionality
+		- work completed for
+			- core
+			- block
+			- wheel
+			- phrase
+		- demo tests passing:
+			- block/wheel/phrase - 001, 002, 003, 005, 007, 010, 011, 015, 078
+			- gradients - 039, 081, 085
+			
 to 170204
 	- refactoring
 		- removed scrawl.work.d and rewritten .get functionality
