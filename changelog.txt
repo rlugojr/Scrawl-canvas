@@ -31,6 +31,13 @@ Currently known bugs
 
 CHANGE LOG
 ------------------------------------------------------------------------------------
+to 170213
+	- test refactor to date
+		- demo tests passing:
+			- block/wheel/phrase - 001, 002, 003, 005, 007, 010, 011, 015, 
+				048, 066, 070, 076, 077, 078, 121
+			- gradients - 039, 048, 081, 085
+
 to 170211
 	- refactoring
 		- refactoring all setters
@@ -40,9 +47,6 @@ to 170211
 			- block
 			- wheel
 			- phrase
-		- demo tests passing:
-			- block/wheel/phrase - 001, 002, 003, 005, 007, 010, 011, 015, 078
-			- gradients - 039, 081, 085
 			
 to 170204
 	- refactoring

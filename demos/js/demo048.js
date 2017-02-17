@@ -20,6 +20,10 @@ var mycode = function() {
 		shift: 0.002,
 		autoUpdate: true,
 		lockTo: true,
+		startX: '0%',
+		endX: '100%',
+		startY: '0%',
+		endY: '100%',
 		color: [{
 			color: '#333333',
 			stop: 0

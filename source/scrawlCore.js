@@ -144,48 +144,12 @@ Flag - Promise API is supported by browser
 **/
 	my.work.promise = null;
 	/**
-Flag - Web Workers are supported by browser
-@property worker
-@type {Boolean}
-@default null
-@final
-**/
-	my.work.worker = null;
-	/**
-Work vector, for calculations
-@property v
-@type {Vector}
-@private
-**/
-	my.work.v = null;
-	/**
-Work vector, for calculations
-@property colv1
-@type {Vector}
-@private
-**/
-	my.work.colv1 = null;
-	/**
-Work vector, for calculations
-@property colv2
-@type {Vector}
-@private
-**/
-	my.work.colv2 = null;
-	/**
 Default empty object - passed to various functions, to prevent them generating superfluous objects
 @property o
 @type {Object}
 @private
 **/
 	my.work.o = {};
-	/**
-Work quaternions, for calculations
-@property workquat
-@type {Object}
-@private
-**/
-	my.work.workquat = null;
 	/**
 DOM document fragment
 @property f
@@ -238,7 +202,6 @@ Device object - holds details about the browser environment and viewport
 @property device
 @type {Object}
 **/
-	my.device = {};
 	/**
 Key:value pairs of extension alias:Array, used by scrawl.loadExtensions()
 @property loadDependencies
@@ -273,6 +236,7 @@ A __general__ function that initializes (or resets) the Scrawl library and popul
     scrawl.init();
 **/
 	my.init = function() {
+		// console.log('INIT called');
 		if (!my.entity) {
 			my.reset();
 			my.device = new my.Device();
@@ -306,12 +270,13 @@ scrawl.init hook function - modified by stacks extension
 @private
 **/
 	my.createDefaultPad = function() {
-		var p, cellname, name;
+		// console.log('CREATEDEFAULTPAD called');
+		var p, cellname, name, s;
 		if (my.device.canvas) {
 			name = 'defaultHiddenCanvasElement';
-			p = my.addCanvasToPage({
-				name: name,
-			});
+			s = my.requestObject('name', name);
+			p = my.addCanvasToPage(s);
+			my.releaseObject(s);
 			name = p.name;
 			cellname = name + '_base';
 			my.removeItem(my.padnames, name);
@@ -337,6 +302,7 @@ A __general__ function that resets the Scrawl library to empty arrays and object
     scrawl.reset();
 **/
 	my.reset = function() {
+		// console.log('RESET called');
 		for (var i = 0, iz = my.work.nameslist.length; i < iz; i++) {
 			my[my.work.nameslist[i]] = [];
 		}
@@ -358,6 +324,7 @@ This function auto-runs when scrawl.core loads
 @private
 **/
 	my.simpleLoader = (function() {
+		// console.log('SIMPLELOADER called');
 		function _load(tag) {
 			return function(url) {
 				return new Promise(function(resolve, reject) {
@@ -399,6 +366,7 @@ A __general__ function that checks to see if the Promise API is supported by the
 @private
 **/
 	my.checkForPromise = function() {
+		// console.log('CHECKFORPROMISE called');
 		if (my.work.promise !== null) {
 			return my.work.promise;
 		}
@@ -410,17 +378,6 @@ A __general__ function that checks to see if the Promise API is supported by the
 			my.work.promise = false;
 			return false;
 		}
-	};
-	/**
-Random uuid generator - http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
-@method generateUuid
-@return random (v4) id
-**/
-	my.generateUuid = function() {
-		function s4() {
-			return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
-		}
-		return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
 	};
 	/**
 A __general__ function that loads supporting extensions and integrates them into the core
@@ -495,6 +452,7 @@ The argument object can include the following attributes:
 @chainable
 **/
 	my.loadExtensions = function(items) {
+		// console.log('LOADEXTENSIONS called');
 		items = my.safeObject(items);
 		my.work.currentPath = items.path || '';
 		my.work.currentPathMinified = my.xtGet(items.minified, true);
@@ -514,6 +472,7 @@ loadExtensions helper function
 @private
 **/
 	my.loadExtensionsUsingVanilla = function(items) {
+		// console.log('LOADEXTENSIONSUSINGVANILLA called');
 		var path, callback, error, mini, tail, loaded, required, startTime, timeout, i, iz, getExtensions, done;
 		items = my.safeObject(items);
 		path = my.work.currentPath;
@@ -569,6 +528,7 @@ loadExtensions helper function - uses the new Promise api, if it is available
 @private
 **/
 	my.loadExtensionsUsingPromise = function(items) {
+		// console.log('LOADEXTENSIONSUSINGPROMISE called');
 		items = my.safeObject(items);
 		var loader, path, file, alias, callback, error, mini, tail, required, request, i, iz;
 		loader = my.simpleLoader;
@@ -595,6 +555,7 @@ loadExtensions helper function
 @private
 **/
 	my.loadExtensionsConcatenator = function(items) {
+		// console.log('LOADEXTENSIONSCONCATENATOR called');
 		items = my.safeObject(items);
 		var exts = [],
 			item,
@@ -659,6 +620,7 @@ A __utility__ function that adds the attributes of the additive object to those 
     //  }
 **/
 	my.mergeInto = function(o1, o2) {
+		// console.log('MERGEINTO called');
 		for (var key in o2) {
 			if (o2.hasOwnProperty(key) && !my.xt(o1[key])) {
 				o1[key] = o2[key];
@@ -679,6 +641,7 @@ A __utility__ function that takes two arrays and creates merges both into a new 
     //result is ['Apple', 'Orange', 'Banana', 'Peach', 'Cherry']
 **/
 	my.mergeArraysUnique = function(a1, a2) {
+		// console.log('MERGEARRAYSUNIQUE called');
 		var result = [],
 			item,
 			i, iz;
@@ -724,6 +687,7 @@ A __utility__ function that adds the attributes of the additive object to those 
     //  }
 **/
 	my.mergeOver = function(o1, o2) {
+		// console.log('MERGEOVER called');
 		for (var key in o2) {
 			if (o2.hasOwnProperty(key)) {
 				o1[key] = o2[key];
@@ -743,6 +707,7 @@ A __utility__ function that checks an array to see if it contains a given value
     scrawl.contains(myarray, 'banana'); //false
 **/
 	my.contains = function(item, k) {
+		// console.log('CONTAINS called');
 		if (Array.isArray(item)) {
 			return (item.indexOf(k) >= 0) ? true : false;
 		}
@@ -755,6 +720,7 @@ A __utility__ function to convert strings (such as percentages) to integer value
 @return Integer number; 0 on error
 **/
 	my.toInt = function(item) {
+		// console.log('TOINT called');
 		if (item.substring) {
 			item = parseFloat(item);
 		}
@@ -772,6 +738,7 @@ A __utility__ function that adds a value to an array if the array doesn't alread
     scrawl.pushUnique(myarray, 'banana');   //returns ['apple', 'orange', 'banana']
 **/
 	my.pushUnique = function(item, o) {
+		// console.log('PUSHUNIQUE called');
 		if (item.indexOf(o) < 0) {
 			item.push(o);
 		}
@@ -789,6 +756,7 @@ A __utility__ function that removes a value from an array
     scrawl.removeItem(myarray, 'apple');    //returns ['orange']
 **/
 	my.removeItem = function(item, o) {
+		// console.log('REMOVEITEM called');
 		var index = item.indexOf(o);
 		if (index >= 0) {
 			item.splice(index, 1);
@@ -809,6 +777,7 @@ A __utility__ function that checks to see if a number is between two other numbe
     scrawl.isBetween(3, 3, 5, true);    //returns true
 **/
 	my.isBetween = function(no, a, b, e) {
+		// console.log('ISBETWEEN called');
 		var value;
 		if (a > b) {
 			value = a;
@@ -858,6 +827,7 @@ Valid identifier Strings include:
 **/
 	my.work.isa_whitelist = ['str', 'fn', 'arr', 'bool', 'canvas', 'date', 'dom', 'event', 'img', 'num', 'realnum', 'obj', 'quaternion', 'vector', 'video'];
 	my.isa = function() {
+		// console.log('ISA called');
 		var len = arguments.length,
 			arg, label;
 		if (len == 2) {
@@ -870,48 +840,63 @@ Valid identifier Strings include:
 		return false;
 	};
 	my.isa_str = function(item) {
+		// console.log('ISA_STRING called');
 		return (item && item.substring) ? true : false;
 	};
 	my.isa_fn = function(item) {
+		// console.log('ISA_FN called');
 		return (typeof item === 'function') ? true : false;
 	};
 	my.isa_arr = function(item) {
+		// console.log('ISA_ARR called');
 		return (Array.isArray(item)) ? true : false;
 	};
 	my.isa_bool = function(item) {
+		// console.log('ISA_BOOL called');
 		return (typeof item === 'boolean') ? true : false;
 	};
 	my.isa_canvas = function(item) {
+		// console.log('ISA_CANVAS called');
 		return (Object.prototype.toString.call(item) === '[object HTMLCanvasElement]') ? true : false;
 	};
 	my.isa_date = function(item) {
+		// console.log('ISA_DATE called');
 		return (Object.prototype.toString.call(item) === '[object Date]') ? true : false;
 	};
 	my.isa_dom = function(item) {
+		// console.log('ISA_DOM called');
 		return (item && item.querySelector && item.dispatchEvent) ? true : false;
 	};
 	my.isa_event = function(item) {
+		// console.log('ISA_EVENT called');
 		return (item && item.preventDefault && item.initEvent) ? true : false;
 	};
 	my.isa_img = function(item) {
+		// console.log('ISA_IMG called');
 		return (Object.prototype.toString.call(item) === '[object HTMLImageElement]') ? true : false;
 	};
 	my.isa_num = function(item) {
+		// console.log('ISA_NUM called');
 		return (item && item.toFixed) ? true : false;
 	};
 	my.isa_realnum = function(item) {
+		// console.log('ISA_REALNUM called');
 		return (item && item.toFixed && !isNaN(item) && isFinite(item)) ? true : false;
 	};
 	my.isa_obj = function(item) {
+		// console.log('ISA_OBJ called');
 		return (Object.prototype.toString.call(item) === '[object Object]') ? true : false;
 	};
 	my.isa_quaternion = function(item) {
+		// console.log('ISA_QUATERNION called');
 		return (item && item.type && item.type === 'Quaternion') ? true : false;
 	};
 	my.isa_vector = function(item) {
+		// console.log('ISA_VECTOR called');
 		return (item && item.type && item.type === 'Vector') ? true : false;
 	};
 	my.isa_video = function(item) {
+		// console.log('ISA_VIDEO called');
 		return (Object.prototype.toString.call(item) === '[object HTMLVideoElement]') ? true : false;
 	};
 	/**
@@ -922,6 +907,7 @@ Check to see if variable is an Object
 @private
 **/
 	my.safeObject = function(items) {
+		// console.log('SAFEOBJECT called');
 		return (Object.prototype.toString.call(items) === '[object Object]') ? items : my.work.o;
 	};
 	/**
@@ -936,6 +922,7 @@ A __utility__ function for variable type checking
     scrawl.xt(myboolean);   //returns false
 **/
 	my.xt = function(item) {
+		// console.log('XT called');
 		return (typeof item == 'undefined') ? false : true;
 	};
 	/**
@@ -944,13 +931,23 @@ A __utility__ function that checks an argument list of values and returns the fi
 @return first defined variable; null if all values are undefined
 **/
 	my.xtGet = function() {
+		// console.log('XTGET called');
 		var slice,
 			i,
-			iz;
+			iz,
+			a;
 		if (arguments.length > 0) {
 			for (i = 0, iz = arguments.length; i < iz; i++) {
-				if (typeof arguments[i] !== 'undefined') {
-					return arguments[i];
+				a = arguments[i];
+				if (null != a) {
+					if(a.toFixed){
+						if(!isNaN(a)) {
+							return a;
+						}
+					}
+					else{
+						return a;
+					}
 				}
 			}
 		}
@@ -965,13 +962,16 @@ False: 0, -0, '', undefined, null, false, NaN
 @return first true variable; null if all values are false
 **/
 	my.xtGetTrue = function() {
+		// console.log('XTGETTRUE called');
 		var slice,
 			i,
-			iz;
+			iz,
+			a;
 		if (arguments.length > 0) {
 			for (i = 0, iz = arguments.length; i < iz; i++) {
-				if (arguments[i]) {
-					return arguments[i];
+				a = arguments[i];
+				if (a) {
+					return a;
 				}
 			}
 		}
@@ -990,6 +990,7 @@ A __utility__ function for variable type checking
     scrawl.xta([mystring, myboolean]);  //returns false
 **/
 	my.xta = function() {
+		// console.log('XTA called');
 		var slice,
 			i,
 			iz;
@@ -1023,6 +1024,7 @@ A __utility__ function for variable type checking
     scrawl.xto(mystring, myboolean);    //returns true
 **/
 	my.xto = function() {
+		// console.log('XTO called');
 		var slice,
 			i,
 			iz;
@@ -1056,6 +1058,7 @@ The argument is an optional String - permitted values include 'stack', 'pad', 'e
     scrawl.setDisplayOffsets();
 **/
 	my.setDisplayOffsets = function() {
+		// console.log('SETDISPLAYOFFSETS called');
 		var i,
 			iz,
 			padnames = my.padnames,
@@ -1074,20 +1077,23 @@ A __private__ function that searches the DOM for canvas elements and generates P
 @private
 **/
 	my.getCanvases = function() {
+		// console.log('GETCANVASES called');
 		var elements,
 			pad,
 			i,
-			iz;
+			iz,
+			s;
 		elements = document.getElementsByTagName("canvas");
 		if (elements.length > 0) {
+			s = my.requestObject();
 			for (i = 0, iz = elements.length; i < iz; i++) {
-				pad = my.makePad({
-					canvasElement: elements[i]
-				});
+				s.canvasElement = elements[i];
+				pad = my.makePad(s);
 				if (i === 0) {
 					my.work.currentPad = pad.name;
 				}
 			}
+			my.releaseObject(s);
 			return true;
 		}
 		return false;
@@ -1120,6 +1126,7 @@ The argument object should include the following attributes:
     </body>
 **/
 	my.addCanvasToPage = function(items) {
+		// console.log('ADDCANVASTOPAGE called');
 		var parent,
 			canvas,
 			pad,
@@ -1145,13 +1152,28 @@ A __display__ function to ask Pads to get their Cells to clear their &lt;canvas&
 @chainable
 **/
 	my.clear = function(pads) {
+		// console.log('CLEAR called');
 		var padnames,
 			pad = my.pad,
+			test = false,
 			i,
 			iz;
-		padnames = (pads) ? [].concat(pads) : my.padnames;
+		if(pads){
+			if(pads.substring){
+				padnames = my.requestArray(pads);
+				test = true;
+			}
+			else{
+				padnames = pads;			}
+		}
+		else{
+			padnames = my.padnames;
+		}
 		for (i = 0, iz = padnames.length; i < iz; i++) {
 			pad[padnames[i]].clear();
+		}
+		if(test){
+			my.releaseArray(padnames);
 		}
 		return my;
 	};
@@ -1164,13 +1186,28 @@ A __display__ function to ask Pads to get their Cells to compile their scenes
 @chainable
 **/
 	my.compile = function(pads, mouse) {
+		// console.log('COMPILE called');
 		var padnames,
 			pad = my.pad,
+			test = false,
 			i,
 			iz;
-		padnames = (pads) ? [].concat(pads) : my.padnames;
+		if(pads){
+			if(pads.substring){
+				padnames = my.requestArray(pads);
+				test = true;
+			}
+			else{
+				padnames = pads;			}
+		}
+		else{
+			padnames = my.padnames;
+		}
 		for (i = 0, iz = padnames.length; i < iz; i++) {
 			pad[padnames[i]].compile(mouse);
+		}
+		if(test){
+			my.releaseArray(padnames);
 		}
 		return my;
 	};
@@ -1182,13 +1219,28 @@ A __display__ function to ask Pads to show the results of their latest display c
 @chainable
 **/
 	my.show = function(pads) {
+		// console.log('SHOW called');
 		var padnames,
 			pad = my.pad,
+			test = false,
 			i,
 			iz;
-		padnames = (pads) ? [].concat(pads) : my.padnames;
+		if(pads){
+			if(pads.substring){
+				padnames = my.requestArray(pads);
+				test = true;
+			}
+			else{
+				padnames = pads;			}
+		}
+		else{
+			padnames = my.padnames;
+		}
 		for (i = 0, iz = padnames.length; i < iz; i++) {
 			pad[padnames[i]].show();
+		}
+		if(test){
+			my.releaseArray(padnames);
 		}
 		return my;
 	};
@@ -1201,13 +1253,28 @@ A __display__ function to ask Pads to undertake a complete clear-compile-show di
 @chainable
 **/
 	my.render = function(pads, mouse) {
+		// console.log('RENDER called');
 		var padnames,
 			pad = my.pad,
+			test = false,
 			i,
 			iz;
-		padnames = (pads) ? [].concat(pads) : my.padnames;
+		if(pads){
+			if(pads.substring){
+				padnames = my.requestArray(pads);
+				test = true;
+			}
+			else{
+				padnames = pads;			}
+		}
+		else{
+			padnames = my.padnames;
+		}
 		for (i = 0, iz = padnames.length; i < iz; i++) {
 			pad[padnames[i]].render(mouse);
+		}
+		if(test){
+			my.releaseArray(padnames);
 		}
 		return my;
 	};
@@ -1219,6 +1286,7 @@ A __utility__ function to add two percent strings together
 @return String result
 **/
 	my.addPercentages = function(a, b) {
+		// console.log('ADDPERCENTAGES called');
 		a = parseFloat(a);
 		b = parseFloat(b);
 		return (a + b) + '%';
@@ -1230,6 +1298,7 @@ A __utility__ function to reverse the value of a percentage string
 @return String result
 **/
 	my.reversePercentage = function(a) {
+		// console.log('REVERSEPERCENTAGES called');
 		a = parseFloat(a);
 		a = -a;
 		return a + '%';
@@ -1242,6 +1311,7 @@ A __utility__ function to subtract a percent string from another
 @return String result
 **/
 	my.subtractPercentages = function(a, b) {
+		// console.log('SUBTRACTPERCENTAGES called');
 		a = parseFloat(a);
 		b = parseFloat(b);
 		return (a - b) + '%';
@@ -1263,6 +1333,7 @@ The touchenter event is deprecated, but necessary for scrawl functionality
 @private
 **/
 		my.triggerTouchEnter = function(e, el) {
+			// console.log('TRIGGERTOUCHEVENT called');
 			my.updateCustomTouch(e, el, 'touchenter');
 		};
 		/**
@@ -1274,6 +1345,7 @@ The touchleave event is deprecated, but necessary for scrawl functionality
 @private
 **/
 		my.triggerTouchLeave = function(e, el) {
+			// console.log('TRIGGERTOUCHLEAVE called');
 			my.updateCustomTouch(e, el, 'touchleave');
 		};
 		/**
@@ -1285,6 +1357,7 @@ The touchfollow event is entirely custom, designed to allow elements to subscrib
 @private
 **/
 		my.triggerTouchFollow = function(e, el) {
+			// console.log('TRIGGERTOUCHFOLLOW called');
 			my.updateCustomTouch(e, el, 'touchfollow');
 		};
 		/**
@@ -1294,6 +1367,7 @@ A custom __event listener__ helper function
 @private
 **/
 		my.cloneTouchEventItem = function(oT) {
+			// console.log('CLONETOUCHEVENTITEM called');
 			var nT = {};
 			nT.clientX = oT.clientX;
 			nT.clientY = oT.clientY;
@@ -1314,6 +1388,7 @@ A custom __event listener__ helper function
 @private
 **/
 		my.updateCustomTouch = function(e, el, type) {
+			// console.log('UPDATECUSTOMTOUCH called');
 			var evt,
 				changedTouches = [],
 				targetTouches = [],
@@ -1375,9 +1450,10 @@ A utility function for adding JavaScript event listeners to multiple elements
 @param {String} evt - or an Array of Strings
 @param {Function} fn - function to be called when event triggers
 @param {String} targ - either a querySelectorAll string, or a DOM element, or an Array of DOM elements
-@return always true
+@return not set
 **/
 	my.addNativeListener = function(evt, fn, targ) {
+		// console.log('ADDNATIVELISTENER called');
 		var targets, i, iz, j, jz;
 		my.removeNativeListener(evt, fn, targ);
 		evt = [].concat(evt);
@@ -1404,9 +1480,10 @@ A utility function for adding JavaScript event listeners to multiple elements
 @param {String} evt - or an Array of Strings
 @param {Function} fn - function to be called when event triggers
 @param {String} targ - either a querySelectorAll string, or a DOM element, or an Array of DOM elements
-@return always true
+@return not set
 **/
 	my.removeNativeListener = function(evt, fn, targ) {
+		// console.log('REMOVENATIVELISTENER called');
 		var targets, i, iz, j, jz;
 		evt = [].concat(evt);
 		if (targ.substring) {
@@ -1435,6 +1512,7 @@ Adds event listeners to the element
 @return always true
 **/
 	my.addListener = function(evt, fn, targ) {
+		// console.log('ADDLISTENER called');
 		var targets, i, iz, j, jz, nav;
 		my.removeListener(evt, fn, targ);
 		nav = (navigator.pointerEnabled || navigator.msPointerEnabled) ? true : false;
@@ -1515,6 +1593,7 @@ Remove event listeners from the element
 @return true on success; false otherwise
 **/
 	my.removeListener = function(evt, fn, targ) {
+		// console.log('REMOVELISTENER called');
 		var targets, i, iz, j, jz, nav;
 		evt = [].concat(evt);
 		nav = (navigator.pointerEnabled || navigator.msPointerEnabled) ? true : false;
@@ -1596,22 +1675,37 @@ A __utility__ function for performing bucket sorts on scrawl string arrays eg Gr
 @private
 **/
 	my.bucketSort = function(section, attribute, a) {
-		var b, i, iz, o, f;
-		b = [[]];
-		for (i = 0, iz = a.length; i < iz; i++) {
-			o = Math.floor(my[section][a[i]][attribute]);
-			if (!b[o]) {
-				b[o] = [];
+		var s, req, rel, b, i, iz, m, o, f, j, jz;
+		if(Array.isArray(a) && a.length > 1){
+			s = my[section];
+			req = my.requestArray;
+			rel = my.releaseArray;
+			b = req()
+			b.push(req());
+			for (i = 0, iz = a.length; i < iz; i++) {
+				m = a[i];
+				o = Math.floor(s[m][attribute]);
+				if (!b[o]) {
+					b[o] = req();
+				}
+				b[o].push(a[i]);
 			}
-			b[o].push(a[i]);
-		}
-		f = [];
-		for (i = 0, iz = b.length; i < iz; i++) {
-			if (b[i]) {
-				f.push(b[i]);
+			f = req();
+			for (i = 0, iz = b.length; i < iz; i++) {
+				m = b[i];
+				if (m) {
+					for(j = 0, jz = m.length; j < jz; j++){
+						f.push(m[j]);
+					}
+					rel(m);
+				}
 			}
+			rel(b);
+			a.length = 0;
+			a = a.concat(f);
+			rel(f);
 		}
-		return [].concat.apply([], f);
+		return a;
 	};
 	/**
 General helper function - correct mouse coordinates if pad dimensions not equal to base cell dimensions
@@ -1622,12 +1716,13 @@ General helper function - correct mouse coordinates if pad dimensions not equal 
 @return Amended coordinate object; false on error
 **/
 	my.correctCoordinates = function(coords, cell) {
+		// console.log('CORRECTCOORDINATES called');
 		var vector,
 			pad,
 			w, h,
 			get = my.xtGet;
 		coords = my.safeObject(coords);
-		vector = my.makeVector(coords);
+		vector = my.requestVector(coords.x, coords.y, coords.z);
 		if (my.xta(coords.x, coords.y)) {
 			cell = (my.cell[cell]) ? my.cell[cell] : my.cell[my.pad[my.work.currentPad].base];
 			pad = my.pad[cell.pad];
@@ -1651,6 +1746,7 @@ A __general__ function which passes on requests to Pads to generate new &lt;canv
 @return New Cell object
 **/
 	my.addNewCell = function(data, pad) {
+		// console.log('ADDNEWCELL called');
 		pad = (pad && pad.substring) ? pad : my.work.currentPad;
 		return my.pad[pad].addNewCell(data);
 	};
@@ -1662,6 +1758,7 @@ A __general__ function which deletes Cell objects and their associated paraphina
 @chainable
 **/
 	my.deleteCells = function() {
+		// console.log('DELETECELLS called');
 		var slice,
 			i,
 			iz,
@@ -1702,19 +1799,41 @@ A __general__ function which adds supplied entitynames to Group.entitys attribut
 @chainable
 **/
 	my.addEntitysToGroups = function(groups, entitys) {
+		// console.log('ADDENTITYSTOGROUPS called');
 		var groupArray,
 			entityArray,
+			req, rel, groupFlag = false, entityFlag = false,
 			group,
 			i,
 			iz;
 		if (my.xta(groups, entitys)) {
-			groupArray = [].concat(groups);
-			entityArray = [].concat(entitys);
+			req = my.requestArray;
+			rel = my.releaseArray;
+			if(groups.substring){
+				groupArray = req(groups);
+				groupFlag = true;
+			}
+			else{
+				groupArray = groups;
+			}
+			if(entitys.substring){
+				entityArray = req(entitys);
+				entityFlag = true;
+			}
+			else{
+				entityArray = entitys;
+			}
 			for (i = 0, iz = groupArray.length; i < iz; i++) {
 				group = my.group[groupArray[i]];
 				if (group) {
 					group.addEntitysToGroup(entityArray);
 				}
+			}
+			if(groupFlag){
+				rel(groupArray);
+			}
+			if(entityFlag){
+				rel(entityArray);
 			}
 		}
 		return my;
@@ -1728,19 +1847,41 @@ A __general__ function which removes supplied entitynames from Group.entitys att
 @chainable
 **/
 	my.removeEntitysFromGroups = function(groups, entitys) {
+		// console.log('REMOVEENTITYSFROMGROUPS called');
 		var groupArray,
 			entityArray,
+			req, rel, groupFlag = false, entityFlag = false,
 			group,
 			i,
 			iz;
 		if (my.xta(groups, entitys)) {
-			groupArray = [].concat(groups);
-			entityArray = [].concat(entitys);
+			req = my.requestArray;
+			rel = my.releaseArray;
+			if(groups.substring){
+				groupArray = req(groups);
+				groupFlag = true;
+			}
+			else{
+				groupArray = groups;
+			}
+			if(entitys.substring){
+				entityArray = req(entitys);
+				entityFlag = true;
+			}
+			else{
+				entityArray = entitys;
+			}
 			for (i = 0, iz = groupArray.length; i < iz; i++) {
 				group = my.group[groupArray[i]];
 				if (group) {
 					group.removeEntitysFromGroup(entityArray);
 				}
+			}
+			if(groupFlag){
+				rel(groupArray);
+			}
+			if(entityFlag){
+				rel(entityArray);
 			}
 		}
 		return my;
@@ -1758,6 +1899,7 @@ A __general__ function to delete entity objects
     scrawl.deleteEntity(['myblock']);
 **/
 	my.deleteEntity = function() {
+		// console.log('DELETEENTITY called');
 		var slice,
 			i,
 			iz,
@@ -1801,7 +1943,9 @@ scrawl.deleteEntity hook function - modified by path extension
 @method pathDeleteEntity
 @private
 **/
-	my.pathDeleteEntity = function(items) {};
+	my.pathDeleteEntity = function(items) {
+		// console.log('PATHDELETEENTITY called');
+	};
 	/**
 A __factory__ function to generate new Vector objects
 @method makeVector
@@ -1814,6 +1958,7 @@ A __factory__ function to generate new Vector objects
         });
 **/
 	my.makeVector = function(items) {
+		// console.log('MAKEVECTOR called');
 		return new my.Vector(items);
 	};
 	/**
@@ -1824,6 +1969,7 @@ A __factory__ function to generate new Pad objects
 @private
 **/
 	my.makePad = function(items) {
+		// console.log('MAKEPAD called');
 		return new my.Pad(items);
 	};
 	/**
@@ -1834,6 +1980,7 @@ A __factory__ function to generate new Cell objects
 @private
 **/
 	my.makeCell = function(items) {
+		// console.log('MAKECELL called');
 		return new my.Cell(items);
 	};
 	/**
@@ -1844,6 +1991,7 @@ A __factory__ function to generate new Context objects
 @private
 **/
 	my.makeContext = function(items) {
+		// console.log('MAKECONTEXT called');
 		return new my.Context(items);
 	};
 	/**
@@ -1853,6 +2001,7 @@ A __factory__ function to generate new Group objects
 @return Group object
 **/
 	my.makeGroup = function(items) {
+		// console.log('MAKEGROUP called');
 		return new my.Group(items);
 	};
 	/**
@@ -1862,6 +2011,7 @@ A __factory__ function to generate new Gradient objects
 @return Gradient object
 **/
 	my.makeGradient = function(items) {
+		// console.log('MAKEGRADIENT called');
 		return new my.Gradient(items);
 	};
 	/**
@@ -1871,9 +2021,12 @@ A __factory__ function to generate new RadialGradient objects
 @return RadialGradient object
 **/
 	my.makeRadialGradient = function(items) {
+		// console.log('MAKERADIALGRADIENT called');
 		return new my.RadialGradient(items);
 	};
-	my.setPerspectives = function() {};
+	my.setPerspectives = function() {
+		// console.log('SETPERSPECTIVES called');
+	};
 
 	/**
 # Vector
@@ -1890,6 +2043,7 @@ A __factory__ function to generate new RadialGradient objects
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 	my.Vector = function(items) {
+		// console.log('VECTOR CONSTRUCTOR called');
 		items = my.safeObject(items);
 		/**
 X coordinate (px)
@@ -1943,6 +2097,7 @@ Set the Vector's coordinates to values that will result in the given magnitude
 @chainable
 **/
 	my.Vector.prototype.setMagnitudeTo = function(item) {
+		// console.log(this.name, 'VECTOR.SETMAGNITUDETO called');
 		this.normalize();
 		this.scalarMultiply(item);
 		if (this.getMagnitude() !== item) {
@@ -1962,6 +2117,7 @@ Normalize the Vector to a unit vector
 @chainable
 **/
 	my.Vector.prototype.normalize = function() {
+		// console.log(this.name, 'VECTOR.NORMALIZE called');
 		var val = this.getMagnitude();
 		if (val > 0) {
 			this.x /= val;
@@ -1977,6 +2133,7 @@ Set all attributes to zero
 @chainable
 **/
 	my.Vector.prototype.zero = function() {
+		// console.log(this.name, 'VECTOR.ZERO called');
 		this.x = 0;
 		this.y = 0;
 		this.z = 0;
@@ -1990,6 +2147,7 @@ Set attributes to new values
 @chainable
 **/
 	my.Vector.prototype.set = function(items) {
+		// console.log(this.name, 'VECTOR.SET called');
 		items = my.safeObject(items);
 		var get = my.xtGet;
 		this.x = (get(items.x, this.x));
@@ -2004,6 +2162,7 @@ Compare two Vector objects for equality
 @return True if argument object is a Vector, and all attributes match; false otherwise
 **/
 	my.Vector.prototype.isEqual = function(item) {
+		// console.log(this.name, 'VECTOR.ISEQUAL called');
 		if (my.isa_vector(item)) {
 			if (this.x === item.x && this.y === item.y && this.z === item.z) {
 				return true;
@@ -2018,6 +2177,7 @@ Comparea vector-like object to this one for equality
 @return True if all attributes match; false otherwise
 **/
 	my.Vector.prototype.isLike = function(item) {
+		// console.log(this.name, 'VECTOR.ISLIKE called');
 		if (my.isa_obj(item)) {
 			if (this.x === item.x && this.y === item.y && this.z === item.z) {
 				return true;
@@ -2031,6 +2191,7 @@ extracts x and y data
 @return Object (not vector) with x and y attributes
 **/
 	my.Vector.prototype.getData = function() {
+		// console.log(this.name, 'VECTOR.GETDATA called');
 		return {
 			x: this.x,
 			y: this.y,
@@ -2044,6 +2205,7 @@ Check if x and y attributes are set
 @return True if argument possesses x and y attributes
 **/
 	my.Vector.prototype.hasCoordinates = function(item) {
+		// console.log(this.name, 'VECTOR.HASCOORDINATES called');
 		return (my.xta(item, item.x, item.y)) ? true : false;
 	};
 	/**
@@ -2055,6 +2217,7 @@ Add a Vector to this Vector
 @chainable
 **/
 	my.Vector.prototype.vectorAdd = function(item) {
+		// console.log(this.name, 'VECTOR.VECTORADD called');
 		item = my.safeObject(item);
 		this.x += item.x || 0;
 		this.y += item.y || 0;
@@ -2069,6 +2232,7 @@ Subtract a Vector from this Vector
 @chainable
 **/
 	my.Vector.prototype.vectorSubtract = function(item) {
+		// console.log(this.name, 'VECTOR.VECTORSUBTRACT called');
 		item = my.safeObject(item);
 		this.x -= item.x || 0;
 		this.y -= item.y || 0;
@@ -2083,6 +2247,7 @@ Multiply a Vector with this Vector
 @chainable
 **/
 	my.Vector.prototype.vectorMultiply = function(item) {
+		// console.log(this.name, 'VECTOR.VECTORMULTIPLY called');
 		item = my.safeObject(item);
 		this.x *= item.x || 1;
 		this.y *= item.y || 1;
@@ -2097,6 +2262,7 @@ Divide a Vector into this Vector
 @chainable
 **/
 	my.Vector.prototype.vectorDivide = function(item) {
+		// console.log(this.name, 'VECTOR.VECTORDIVIDE called');
 		item = my.safeObject(item);
 		this.x /= ((item.x || 0) !== 0) ? item.x : 1;
 		this.y /= ((item.y || 0) !== 0) ? item.y : 1;
@@ -2111,6 +2277,7 @@ Multiply this Vector by a scalar value
 @chainable
 **/
 	my.Vector.prototype.scalarMultiply = function(item) {
+		// console.log(this.name, 'VECTOR.SCALARMULTIPLY called');
 		if (item.toFixed) {
 			this.x *= item;
 			this.y *= item;
@@ -2127,6 +2294,7 @@ Divide this Vector by a scalar value
 @chainable
 **/
 	my.Vector.prototype.scalarDivide = function(item) {
+		// console.log(this.name, 'VECTOR.SCALARDIVIDE called');
 		if ((item.toFixed) && item !== 0) {
 			this.x /= item;
 			this.y /= item;
@@ -2141,6 +2309,7 @@ Retrieve Vector's magnitude value
 @return Magnitude value
 **/
 	my.Vector.prototype.getMagnitude = function() {
+		// console.log(this.name, 'VECTOR.GETMAGNITUDE called');
 		return Math.sqrt((this.x * this.x) + (this.y * this.y) + (this.z * this.z));
 	};
 	/**
@@ -2149,6 +2318,7 @@ Check to see if Vector is a zero vector
 @return True if Vector is non-zero; false otherwise
 **/
 	my.Vector.prototype.checkNotZero = function() {
+		// console.log(this.name, 'VECTOR.CHECKNOTZERO called');
 		return (this.x || this.y || this.z) ? true : false;
 	};
 	/**
@@ -2157,11 +2327,11 @@ Return a clone of this Vector
 @return Clone of this Vector
 **/
 	my.Vector.prototype.getVector = function() {
-		return my.makeVector({
-			x: this.x,
-			y: this.y,
-			z: this.z
-		});
+		// console.log(this.name, 'VECTOR.GETVECTOR called');
+		var s = my.requestObject('x', this.x, 'y', this.y, 'z', this.z),
+			r = my.makeVector(s);
+		my.releaseObject(s);
+		return r;
 	};
 	/**
 Obtain the cross product of one Vector and a copy of this, or another, Vector
@@ -2175,12 +2345,14 @@ Arithmetic is v(crossProduct)u, not u(crossProduct)v
 @chainable
 **/
 	my.Vector.prototype.getCrossProduct = function(u, v) {
+		// console.log(this.name, 'VECTOR.GETCROSSPRODUCT called');
 		var v1x,
 			v1y,
 			v1z,
 			v2x,
 			v2y,
-			v2z;
+			v2z,
+			s, r;
 		if (my.isa_obj(u)) {
 			v = (my.isa_obj(v)) ? v : this;
 			v1x = v.x || 0;
@@ -2189,11 +2361,10 @@ Arithmetic is v(crossProduct)u, not u(crossProduct)v
 			v2x = u.x || 0;
 			v2y = u.y || 0;
 			v2z = u.z || 0;
-			return my.makeVector({
-				x: (v1y * v2z) - (v1z * v2y),
-				y: -(v1x * v2z) + (v1z * v2x),
-				z: (v1x * v2y) + (v1y * v2x)
-			});
+			s = my.requestObject('x', (v1y * v2z) - (v1z * v2y), 'y', -(v1x * v2z) + (v1z * v2x), 'z', (v1x * v2y) + (v1y * v2x));
+			r = my.makeVector(s);
+			my.releaseObject(s);
+			return r;
 		}
 		return this;
 	};
@@ -2208,6 +2379,7 @@ Arithmetic is v(dotProduct)u, not u(dotProduct)v
 @return Dot product result; false on failure
 **/
 	my.Vector.prototype.getDotProduct = function(u, v) {
+		// console.log(this.name, 'VECTOR.GETDOTPRODUCT called');
 		if (my.isa_obj(u)) {
 			v = (my.isa_obj(v)) ? v : this;
 			return ((u.x || 0) * (v.x || 0)) + ((u.y || 0) * (v.y || 0)) + ((u.z || 0) * (v.z || 0));
@@ -2223,6 +2395,7 @@ Obtain the triple scalar product of two Vectors and this, or a third, Vector
 @return Triple scalar product result; false on failure
 **/
 	my.Vector.prototype.getTripleScalarProduct = function(u, v, w) {
+		// console.log(this.name, 'VECTOR.GETTRIPLESCALARPRODUCT called');
 		var ux,
 			uy,
 			uz,
@@ -2255,14 +2428,16 @@ Rotate the Vector by a given angle
 @chainable
 **/
 	my.Vector.prototype.rotate = function(angle) {
-		var stat_vr = [0, 0];
+		// console.log(this.name, 'VECTOR.ROTATE called');
+		var stat_vr;
 		if (angle.toFixed) {
+			var stat_vr = my.requestArray();
 			stat_vr[0] = Math.atan2(this.y, this.x);
 			stat_vr[0] += (angle * 0.01745329251);
 			stat_vr[1] = this.getMagnitude();
 			this.x = stat_vr[1] * Math.cos(stat_vr[0]);
 			this.y = stat_vr[1] * Math.sin(stat_vr[0]);
-			return this;
+			my.releaseArray(stat_vr);
 		}
 		return this;
 	};
@@ -2273,6 +2448,7 @@ Rotate the Vector by 180 degrees
 @chainable
 **/
 	my.Vector.prototype.reverse = function() {
+		// console.log(this.name, 'VECTOR.REVERSE called');
 		this.x = -this.x;
 		this.y = -this.y;
 		this.z = -this.z;
@@ -2287,6 +2463,7 @@ Rotate a Vector object by a Quaternion rotation
 @chainable
 **/
 	my.Vector.prototype.rotate3d = function(item, mag) {
+		// console.log(this.name, 'VECTOR.ROTATE3D called');
 		var q1,
 			q2,
 			q3,
@@ -2303,6 +2480,74 @@ Rotate a Vector object by a Quaternion rotation
 			return this;
 		}
 		return this;
+	};
+	my.vectorPool = [];
+	my.requestVector = function(x, y, z){
+		var v, s;
+		if(!my.vectorPool.length){
+			s = my.requestObject('name', 'v' + Math.random().toFixed(6));
+			my.vectorPool.push(my.makeVector(s));
+			my.releaseObject(s);
+		}
+		v = my.vectorPool.shift();
+		v.x = x || 0;
+		v.y = y || 0;
+		v.z = z || 0;
+		// console.log('requestVector', v);
+		return v
+	};
+	my.releaseVector = function(v){
+		if(v && v.type === 'Vector'){
+			my.vectorPool.push(v);
+			// console.log('releaseVector', my.vectorPool.length);
+		}
+	};
+	my.arrayPool = [];
+	my.requestArray = function(){
+		var a, i, iz;
+		if(!my.arrayPool.length){
+			my.arrayPool.push([]);
+		}
+		a = my.arrayPool.shift();
+		for(i = 0, iz = arguments.length; i < iz; i++){
+			a.push(arguments[i]);
+		}
+		// console.log('requestArray', a);
+		return a;
+	};
+	my.releaseArray = function(a){
+		if(Array.isArray(a)){
+			a.length = 0;
+			my.arrayPool.push(a);
+			// console.log('releaseArray', my.arrayPool.length);
+		}
+	};
+	my.objectPool = [];
+	my.requestObject = function(){
+		var o, i, iz;
+		if(!my.objectPool.length){
+			my.objectPool.push({});
+		}
+		o = my.objectPool.shift();
+		for(i = 0, iz = arguments.length; i < iz; i += 2){
+			o[arguments[i]] = arguments[i + 1];
+		}
+		// console.log('requestObject', o);
+		return o;
+	};
+	my.releaseObject = function(o){
+		var keys = Object.keys(o),
+			i, iz;
+		for(i = 0, iz = keys.length; i < iz; i++){
+			delete o[keys[i]];
+		}
+		my.objectPool.push(o);
+		// console.log('releaseObject', my.objectPool.length);
+	};
+	my.work.referenceDimensionsObject = {
+		w: 0,
+		h: 0,
+		c: false
 	};
 
 	/**
@@ -2324,6 +2569,7 @@ Rotate a Vector object by a Quaternion rotation
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 	my.Base = function(items) {
+		// console.log('BASE CONSTRUCTOR called', items);
 		return this;
 	};
 	my.Base.prototype = Object.create(Object.prototype);
@@ -2338,7 +2584,8 @@ Rotate a Vector object by a Quaternion rotation
 	my.Base.prototype.libName = 'objectnames';
 
 	my.Base.prototype.init = function(items){
-		items = (Object.prototype.toString.call(items) === '[object Object]') ? items : {};
+		// console.log('BASE.INIT called', items);
+		items = my.safeObject(items);
 		this.makeName(items.name);
 		delete items.name;
 		this.buildVectors();
@@ -2360,6 +2607,7 @@ Rotate a Vector object by a Quaternion rotation
 	};
 	my.Base.prototype.keyAttributeList = [];
 	my.Base.prototype.setKeyAttributes = function(){
+		// console.log('BASE.SETKEYATTRIBUTES called');
 		var keys = this.keyAttributeList,
 			key,
 			i, iz;
@@ -2410,6 +2658,7 @@ Retrieve an attribute value. If the attribute value has not been set, then the d
     box.get('favouriteAnimal');     //returns undefined
 **/
 	my.Base.prototype.get = function(item) {
+		// console.log(this.type, this.name, 'BASE.GET called', item);
 		var undef,
 			g = this.getters[item],
 			d, i;
@@ -2450,13 +2699,14 @@ An attribute value will only be set if the object already has a default value fo
     box.get('favouriteAnimal');     //returns undefined
 **/
 	my.Base.prototype.set = function(items) {
+		// console.log(this.type, this.name, 'BASE.SET called', items, this.setters);
 		var key, i, iz, s,
 			setters = this.setters,
 			keys = Object.keys(items),
 			d = this.defs;
 		for(i = 0, iz = keys.length; i < iz; i++){
 			key = keys[i];
-			s = setters[s];
+			s = setters[key];
 			if(s){
 				s.call(this, items[key]);
 			}
@@ -2489,6 +2739,7 @@ An attribute value will only be set if the object already has a default value fo
     box.get('favouriteAnimal');     //returns undefined
 **/
 	my.Base.prototype.setDelta = function(items) {
+		// console.log(this.type, this.name, 'BASE.SETDELTA called', items);
 		var key, i, iz, s, item, current,
 			setters = this.deltaSetters,
 			keys = Object.keys(items),
@@ -2524,6 +2775,7 @@ Generate unique names for new Scrawl objects
 @private
 **/
 	my.Base.prototype.makeName = function(suggestedName) {
+		// console.log('BASE.MAKENAME called', suggestedName);
 		var name, nameArray;
 		if(my.work.nameslist.indexOf(this.libName) >= 0){
 			name = my.xtGetTrue(suggestedName, this.type, 'default');
@@ -2559,21 +2811,25 @@ Note that any callback or fn attribute functions will be referenced by the clone
 **/
 	my.Base.prototype.cloneExcludedAttributes = ['name'];
 	my.Base.prototype.cloneAmendments = function(a, b) {
+		// console.log(this.name, 'BASE.CLONEAMANDMENTS called');
 		return a;
 	};
 	my.Base.prototype.postCloneUpdates = function(items) {
+		// console.log(this.name, 'BASE.POSTCLONEUPDATES called');
 		return this;
 	};
 	my.Base.prototype.clone = function(items) {
-		items = (Object.prototype.toString.call(items) === '[object Object]') ? items : {};
-		var clone, current, i, iz,
+		// console.log(this.name, 'BASE.CLONE called', items);
+		items = my.safeObject(items);
+		var clone, current, i, iz, s,
 			target = 'make' + this.type,
 			attr = this.cloneExcludedAttributes;
 
-		if(my[target])
-		clone = my[target]({
-			name: items.name || this.name
-		});
+		if(my[target]){
+			s = my.requestObject('name', items.name || this.name);
+			clone = my[target](s);
+			my.releaseObject(s);
+		}
 
 		if(clone){
 			current = this.parse();
@@ -2597,6 +2853,7 @@ Turn the object into a JSON String
 @return object of object's currently set attributes
 **/
 	my.Base.prototype.parse = function() {
+		// console.log(this.name, 'BASE.PARSE called');
 		return JSON.parse(JSON.stringify(this));
 	};
 	/**
@@ -2608,6 +2865,7 @@ Stamp helper function - convert string percentage values to numerical values
 @private
 **/
 	my.Base.prototype.numberConvert = function(val, dim) {
+		// console.log('BASE.NUMBERCONVERT called', val, dim);
 		var result = parseFloat(val) / 100;
 		if (isNaN(result)) {
 			switch (val) {
@@ -2639,11 +2897,13 @@ Stamp helper function - convert string percentage values to numerical values
 @extends Base
 **/
 	my.Device = function() {
+		// console.log('DEVICE CONSTRUCTOR called');
 		this.init();
 		return this;
 	};
 	my.Device.prototype = Object.create(my.Base.prototype);
 	my.Device.prototype.preRegister = function(){
+		// console.log(this.name, 'DEVICE.PREREGISTER called');
 		this.name = 'scrawl_viewport';
 		this.getDeviceData();
 	};
@@ -2773,6 +3033,7 @@ Feature detection
 @private
 **/
 	my.Device.prototype.getDeviceData = function() {
+		// console.log(this.name, 'DEVICE.GETDEVICEDATA called');
 		this.checkCanvas();
 		if (this.canvas) {
 			this.checkCanvasEvenOddWinding();
@@ -2794,6 +3055,7 @@ Modern IE uses pointer events, so Device will not check for IE specific touch-en
 @private
 **/
 	my.Device.prototype.checkTouch = function() {
+		// console.log(this.name, 'DEVICE.CHECKTOUCH called');
 		var test = false;
 		if ('ontouchstart' in window) {
 			test = true;
@@ -2809,6 +3071,7 @@ Check if device supports canvas element
 @private
 **/
 	my.Device.prototype.checkCanvas = function() {
+		// console.log(this.name, 'DEVICE.CHECKCANVAS called');
 		var c = document.createElement('canvas'),
 			test = c.getContext('2d');
 		this.canvas = (test) ? true : false;
@@ -2819,6 +3082,7 @@ Check if device supports canvas evenOdd winding
 @private
 **/
 	my.Device.prototype.checkCanvasEvenOddWinding = function() {
+		// console.log(this.name, 'DEVICE.CHECKCANVASEVENODDWINDING called');
 		var c = document.createElement('canvas'),
 			x = c.getContext('2d'),
 			w = 'evenodd',
@@ -2850,6 +3114,7 @@ Check if device supports dashed line functionality
 @private
 **/
 	my.Device.prototype.checkCanvasDashedLine = function() {
+		// console.log(this.name, 'DEVICE.CHECKCANVASDASHEDLINE called');
 		var c = document.createElement('canvas'),
 			x = c.getContext('2d'),
 			d = [5, 5],
@@ -2876,6 +3141,7 @@ Check if device supports various global composition operation functionalities
 @private
 **/
 	my.Device.prototype.checkCanvasGco = function() {
+		// console.log(this.name, 'DEVICE.CHECKCANVASGCO called');
 		var c = document.createElement('canvas'),
 			x = c.getContext('2d'),
 			test;
@@ -2942,6 +3208,7 @@ Determine viewport dimensions
 @private
 **/
 	my.Device.prototype.getViewportDimensions = function(e) {
+		// console.log(this.name, 'DEVICE.GETVIEWPORTDIMENSIONS called');
 		var d, w, h;
 		if (e) {
 			d = my.device;
@@ -2964,6 +3231,7 @@ Determine viewport position within the page
 @private
 **/
 	my.Device.prototype.getViewportPosition = function(e) {
+		// console.log(this.name, 'DEVICE.GETVIEWPORTPOSITION called');
 		var d, get, ox, oy, doc;
 		if (e) {
 			d = my.device;
@@ -2986,19 +3254,24 @@ Feature detection - hook function
 @method getStacksDeviceData
 @private
 **/
-	my.Device.prototype.getStacksDeviceData = function() {};
+	my.Device.prototype.getStacksDeviceData = function() {
+		// console.log(this.name, 'DEVICE.GETSTACKSDEVICEDATA called');
+	};
 	/**
 Feature detection - hook function
 @method getImagesDeviceData
 @private
 **/
-	my.Device.prototype.getImagesDeviceData = function() {};
+	my.Device.prototype.getImagesDeviceData = function() {
+		// console.log(this.name, 'DEVICE.GETIMAGEDEVICEDATA called');
+	};
 	/**
 Determine if viewport is in landscape mode - if width and height arte equal, landscape mode is assumend
 @method isLandscape
 @private
 **/
 	my.Device.prototype.isLandscape = function() {
+		// console.log(this.name, 'DEVICE.ISLANDSCAPE called');
 		return (this.width < this.height) ? false : true;
 	};
 	/**
@@ -3007,6 +3280,7 @@ Determine if viewport is in portrait mode - if width and height arte equal, land
 @private
 **/
 	my.Device.prototype.isPortrait = function() {
+		// console.log(this.name, 'DEVICE.ISPORTRAIT called');
 		return (this.width < this.height) ? true : false;
 	};
 
@@ -3030,6 +3304,7 @@ Certain Scrawl extensions will add functionality to this object, for instance sc
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 	my.Position = function(items) {
+		// console.log('POSITION CONSTRUCTOR called', items);
 		return this;
 	};
 	my.Position.prototype = Object.create(my.Base.prototype);
@@ -3152,6 +3427,7 @@ Entity, cell or element height (in pixels)
 	my.Position.prototype.keyAttributeList = my.mergeArraysUnique(my.Base.prototype.keyAttributeList, ['pivot', 'scale', 'flipReverse', 'flipUpend', 'lockX', 'lockY', 'roll', 'mouseIndex', 'width', 'height']);
 	my.Position.prototype.cloneExcludedAttributes = my.mergeArraysUnique(my.Base.prototype.cloneExcludedAttributes, ['start', 'handle']);
 	my.Position.prototype.cloneAmendments = function(a, b) {
+		// console.log(this.name, 'POSITION.CLONEAMENDMENTS called');
 		var get = my.xtGet,
 			xt = my.xt;
 		if(!xt(a.start)){
@@ -3172,15 +3448,19 @@ Entity, cell or element height (in pixels)
 	};
 	my.Position.prototype.getters = {
 		startX: function(){
+		// console.log(this.name, 'POSITION.GETTERS.STARTX called');
 			return this.start.x;
 		},
 		startY: function(){
+		// console.log(this.name, 'POSITION.GETTERS.STARTY called');
 			return this.start.y;
 		},
 		handleX: function(){
+		// console.log(this.name, 'POSITION.GETTERS.HANDLEX called');
 			return this.handle.x;
 		},
 		handleY: function(){
+		// console.log(this.name, 'POSITION.GETTERS.HANDLEY called');
 			return this.handle.y;
 		}
 	};
@@ -3191,6 +3471,7 @@ Get the current start x coordinate
 @return Attribute value
 **/
 	my.Position.prototype.getX = function() {
+		// console.log(this.name, 'POSITION.GETX called');
 		return this.currentStart.x;
 	};
 	/**
@@ -3199,18 +3480,22 @@ Get the current start y coordinate
 @return Attribute value
 **/
 	my.Position.prototype.getY = function() {
+		// console.log(this.name, 'POSITION.GETY called');
 		return this.currentStart.y;
 	};
 	my.Position.prototype.setters = {
 		startX: function(item){
+		// console.log(this.name, 'POSITION.SETTERS.STARTX called');
 			this.start.x = item;
 			this.currentStart.flag = false;
 		},
 		startY: function(item){
+		// console.log(this.name, 'POSITION.SETTERS.STARTY called');
 			this.start.y = item;
 			this.currentStart.flag = false;
 		},
 		start: function(item){
+		// console.log(this.name, 'POSITION.SETTERS.START called');
 			if(typeof item.x !== 'undefined'){
 				this.start.x = item.x;
 			}
@@ -3220,14 +3505,17 @@ Get the current start y coordinate
 			this.currentStart.flag = false;
 		},
 		handleX: function(item){
+		// console.log(this.name, 'POSITION.SETTERS.HANDLEX called');
 			this.handle.x = item;
 			this.currentHandle.flag = false;
 		},
 		handleY: function(item){
+		// console.log(this.name, 'POSITION.SETTERS.HANDLEY called');
 			this.handle.y = item;
 			this.currentHandle.flag = false;
 		},
 		handle: function(item){
+		// console.log(this.name, 'POSITION.SETTERS.HANDLE called');
 			if(typeof item.x !== 'undefined'){
 				this.handle.x = item.x;
 			}
@@ -3237,18 +3525,22 @@ Get the current start y coordinate
 			this.currentHandle.flag = false;
 		},
 		scale: function(item){
+		// console.log(this.name, 'POSITION.SETTERS.SCALE called');
 			this.scale = item;
 			this.currentHandle.flag = false;
 		},
 		width: function(item){
+		// console.log(this.name, 'POSITION.SETTERS.WIDTH called');
 			this.width = item;
 			this.currentHandle.flag = false;
 		},
 		height: function(item){
+		// console.log(this.name, 'POSITION.SETTERS.HEIGHT called');
 			this.height = item;
 			this.currentHandle.flag = false;
 		},
 		pivot: function(item){
+		// console.log(this.name, 'POSITION.SETTERS.PIVOT called');
 			this.pivot = item;
 			this.currentPivotIndex = false;
 		},
@@ -3256,6 +3548,7 @@ Get the current start y coordinate
 	my.mergeInto(my.Position.prototype.setters, my.Base.prototype.setters);
 	my.Position.prototype.deltaSetters = {
 		startX: function(item){
+		// console.log(this.name, 'POSITION.DELTASETTERS.STARTX called');
 			var n = this.start.x;
 			if(item.substring || n.substring){
 				this.start.x = parseFloat(n) + parseFloat(item) + '%';
@@ -3266,6 +3559,7 @@ Get the current start y coordinate
 			this.currentStart.flag = false;
 		},
 		startY: function(item){
+		// console.log(this.name, 'POSITION.DELTASETTERS.STARTY called');
 			var n = this.start.y;
 			if(item.substring || n.substring){
 				this.start.y = parseFloat(n) + parseFloat(item) + '%';
@@ -3276,6 +3570,7 @@ Get the current start y coordinate
 			this.currentStart.flag = false;
 		},
 		start: function(item){
+		// console.log(this.name, 'POSITION.DELTASETTERS.START called');
 			var n;
 			if(typeof item.x !== 'undefined'){
 				n = this.start.x;
@@ -3298,6 +3593,7 @@ Get the current start y coordinate
 			this.currentStart.flag = false;
 		},
 		handleX: function(item){
+		// console.log(this.name, 'POSITION.DELTASETTERS.HANDLEX called');
 			var n = this.handle.x;
 			if(item.substring || n.substring){
 				this.handle.x = parseFloat(n) + parseFloat(item) + '%';
@@ -3308,6 +3604,7 @@ Get the current start y coordinate
 			this.currentHandle.flag = false;
 		},
 		handleY: function(item){
+		// console.log(this.name, 'POSITION.DELTASETTERS.HANDLEY called');
 			var n = this.handle.y;
 			if(item.substring || n.substring){
 				this.handle.y = parseFloat(n) + parseFloat(item) + '%';
@@ -3318,6 +3615,7 @@ Get the current start y coordinate
 			this.currentHandle.flag = false;
 		},
 		handle: function(item){
+		// console.log(this.name, 'POSITION.DELTASETTERS.HANDLE called');
 			var n;
 			if(typeof item.x !== 'undefined'){
 				n = this.handle.x;
@@ -3340,10 +3638,12 @@ Get the current start y coordinate
 			this.currentHandle.flag = false;
 		},
 		scale: function(item){
+		// console.log(this.name, 'POSITION.DELTASETTERS.SCALE called');
 			this.scale += item;
 			this.currentHandle.flag = false;
 		},
 		width: function(item){
+		// console.log(this.name, 'POSITION.DELTASETTERS.WIDTH called');
 			var n = this.width;
 			if(item.substring || n.substring){
 				this.width = parseFloat(n) + parseFloat(item) + '%';
@@ -3354,6 +3654,7 @@ Get the current start y coordinate
 			this.currentHandle.flag = false;
 		},
 		height: function(item){
+		// console.log(this.name, 'POSITION.DELTASETTERS.HEIGHT called');
 			var n = this.height;
 			if(item.substring || n.substring){
 				this.height = parseFloat(n) + parseFloat(item) + '%';
@@ -3370,26 +3671,33 @@ Position.set hook function - modified by animation extension
 @method animationPositionSet
 @private
 **/
-	my.Position.prototype.updateStart = function(item) {};
-	my.Position.prototype.revertStart = function(item) {};
-	my.Position.prototype.reverse = function(item) {};
-	my.Position.prototype.setDeltaAttribute = function(items) {};
+	my.Position.prototype.updateStart = function(item) {
+		// console.log(this.name, 'POSITION.UPDATESTART called', item);
+	};
+	my.Position.prototype.revertStart = function(item) {
+		// console.log(this.name, 'POSITION.REVERTSTART called', item);
+	};
+	my.Position.prototype.reverse = function(item) {
+		// console.log(this.name, 'POSITION.REVERSE called', item);
+	};
+	my.Position.prototype.setDeltaAttribute = function(items) {
+		// console.log(this.name, 'POSITION.SETDELTAATTRIBUTE called', items);
+	};
 	my.Position.prototype.buildVectors = function(){
-		var vec = my.makeVector;
-		this.start = vec({
-			name: this.type + '.' + this.name + '.start'
-		});
-		this.currentStart = vec({
-			name: this.type + '.' + this.name + '.current.start'
-		});
+		// console.log(this.name, 'POSITION.BUILDVECTORS called');
+		var vec = my.makeVector,
+			s = my.requestObject();
+		s.name = this.type + '.' + this.name + '.start';
+		this.start = vec(s);
+		s.name = this.type + '.' + this.name + '.current.start';
+		this.currentStart = vec(s);
 		this.currentStart.flag = false;
-		this.handle = vec({
-			name: this.type + '.' + this.name + '.handle'
-		});
-		this.currentHandle = vec({
-			name: this.type + '.' + this.name + '.current.handle'
-		});
+		s.name = this.type + '.' + this.name + '.handle';
+		this.handle = vec(s);
+		s.name = this.type + '.' + this.name + '.current.handle';
+		this.currentHandle = vec(s);
 		this.currentHandle.flag = false;
+		my.releaseObject(s);
 	};
 	/**
 Position.setDelta hook function - modified by animation extension
@@ -3397,6 +3705,7 @@ Position.setDelta hook function - modified by animation extension
 @private
 **/
 	my.Position.prototype.animationPositionClone = function(a, items) {
+		// console.log(this.name, 'POSITION.ANIMATIONPOSITIONCLONE called');
 		return a;
 	};
 	/**
@@ -3409,73 +3718,82 @@ updateCurrentHandle helper object
 **/
 	my.Position.prototype.getReferenceDimensions = {
 		Pad: function(reference) {
-			return {
-				w: reference.localWidth,
-				h: reference.localHeight,
-				c: false
-			};
+			// console.log(this.name, 'POSITION.GETREFERENCEDIMENSIONS.PAD called');
+			var d = my.work.referenceDimensionsObject;
+			d.w = reference.localWidth;
+			d.h = reference.localHeight;
+			d.c = false;
+			return d;
 		},
 		Cell: function(reference) {
-			return {
-				w: reference.actualWidth,
-				h: reference.actualHeight,
-				c: false
-			};
+			// console.log(this.name, 'POSITION.GETREFERENCEDIMENSIONS.CELL called');
+			var d = my.work.referenceDimensionsObject;
+			d.w = reference.actualWidth;
+			d.h = reference.actualHeight;
+			d.c = false;
+			return d;
 		},
 		Block: function(reference) {
-			var scale = reference.scale;
+			// console.log(this.name, 'POSITION.GETREFERENCEDIMENSIONS.BLOCK called');
+			var scale = reference.scale,
+				d = my.work.referenceDimensionsObject;
 			if(!(my.xt(reference.localWidth))){
 				reference.setLocalDimensions();
 			}
-			return {
-				w: reference.localWidth / scale,
-				h: reference.localHeight / scale,
-				c: false
-			};
+			d.w = reference.localWidth / scale;
+			d.h = reference.localHeight / scale;
+			d.c = false;
+			return d;
 		},
 		Wheel: function(reference) {
-			return {
-				w: reference.width,
-				h: reference.height,
-				c: true
-			};
+			// console.log(this.name, 'POSITION.GETREFERENCEDIMENSIONS.WHEEL called');
+			var d = my.work.referenceDimensionsObject;
+			d.w = reference.width;
+			d.h = reference.height;
+			d.c = true;
+			return d;
 		},
 		Phrase: function(reference) {
-			return {
-				w: reference.width,
-				h: reference.height,
-				c: false
-			};
+			// console.log(this.name, 'POSITION.GETREFERENCEDIMENSIONS.PHRASE called');
+			var d = my.work.referenceDimensionsObject;
+			d.w = reference.width;
+			d.h = reference.height;
+			d.c = false;
+			return d;
 		},
 		Picture: function(reference) {
+			// console.log(this.name, 'POSITION.GETREFERENCEDIMENSIONS.PICTURE called');
 			var scale = reference.scale,
-				data = reference.pasteData;
-			return {
-				w: data.w / scale,
-				h: data.h / scale,
-				c: false
-			};
+				data = reference.pasteData,
+				d = my.work.referenceDimensionsObject;
+			d.w = data.w / scale;
+			d.h = data.h / scale;
+			d.c = false;
+			return d;
 		},
 		Path: function(reference) {
-			return {
-				w: reference.width,
-				h: reference.height,
-				c: (reference.isLine) ? false : true
-			};
+			// console.log(this.name, 'POSITION.GETREFERENCEDIMENSIONS.PATH called');
+			var d = my.work.referenceDimensionsObject;
+			d.w = reference.width;
+			d.h = reference.height;
+			d.c = (reference.isLine) ? false : true;
+			return d;
 		},
 		Shape: function(reference) {
-			return {
-				w: reference.width,
-				h: reference.height,
-				c: (reference.isLine) ? false : true
-			};
+			// console.log(this.name, 'POSITION.GETREFERENCEDIMENSIONS.SHAPE called');
+			var d = my.work.referenceDimensionsObject;
+			d.w = reference.width;
+			d.h = reference.height;
+			d.c = (reference.isLine) ? false : true;
+			return d;
 		},
 		Frame: function(reference) {
-			return {
-				w: reference.width,
-				h: reference.height,
-				c: false
-			};
+			// console.log(this.name, 'POSITION.GETREFERENCEDIMENSIONS.FRAME called');
+			var d = my.work.referenceDimensionsObject;
+			d.w = reference.width;
+			d.h = reference.height;
+			d.c = false;
+			return d;
 		}
 	};
 	/**
@@ -3487,6 +3805,7 @@ Convert handle percentage values to numerical values, stored in currentHandle
 @private
 **/
 	my.Position.prototype.updateCurrentHandle = function() {
+		// console.log(this.type, this.name, 'POSITION.UPDATECURRENTHANDLE called');
 		var dims, cont, conv, handle, test, testx, testy, currentHandle, scale;
 		if (!this.currentHandle.flag) {
 			dims = this.getReferenceDimensions[this.type](this);
@@ -3535,6 +3854,7 @@ Convert start percentage values to numerical values, stored in currentStart
 @private
 **/
 	my.Position.prototype.updateCurrentStart = function(reference) {
+		// console.log(this.type, this.name, 'POSITION.UPDATECURRENTSTART called');
 		var dims, conv, start, currentStart;
 		if (!this.currentStart.flag && reference && reference.type) {
 			currentStart = this.currentStart;
@@ -3563,6 +3883,7 @@ Takes into account lock flag settings
 @private
 **/
 	my.Position.prototype.setStampUsingPivot = function(cell, mouse) {
+		// console.log(this.type, this.name, 'POSITION.SETSTAMPUSINGPIVOT called');
 		var p, e,
 			pivot,
 			action = this.setStampUsingPivotCalculations,
@@ -3609,6 +3930,7 @@ setStampUsingPivot helper object
 **/
 	my.Position.prototype.setStampUsingPivotCalculations = {
 		point: function(obj, pivot) {
+			// console.log(this.name, 'POSITION.SETSTAMPUSINGPIVOTCALCULATIONS.PIVOT called');
 			var entity = my.entity[pivot.entity],
 				current = obj.currentStart,
 				vector = pivot.getCurrentCoordinates().rotate(entity.roll).vectorAdd(entity.currentStart);
@@ -3616,32 +3938,38 @@ setStampUsingPivot helper object
 			current.y = (!obj.lockY) ? vector.y : current.y;
 		},
 		entity: function(obj, pivot) {
+			// console.log(this.name, 'POSITION.SETSTAMPUSINGPIVOTCALCULATIONS.ENTITY called');
 			var vector = (pivot.type === 'Particle') ? pivot.get('place') : pivot.currentStart,
 				current = obj.currentStart;
 			current.x = (!obj.lockX) ? vector.x : current.x;
 			current.y = (!obj.lockY) ? vector.y : current.y;
 		},
 		mouse: function(obj, ignore, cell, mouse) {
+			// console.log(this.name, 'POSITION.SETSTAMPUSINGPIVOTCALCULATIONS.MOUSE called', obj.name, ignore, cell, mouse);
 			var pad,
-				current = obj.currentStart;
+				current = obj.currentStart,
+				v;
 			if (!my.xt(mouse)) {
 				cell = my.cell[cell];
 				pad = my.pad[cell.pad];
 				mouse = pad.mice[obj.mouseIndex];
 			}
-			mouse = obj.correctCoordinates(mouse, cell);
-			if (mouse) {
+			v = obj.correctCoordinates(mouse, cell);
+			if (v) {
 				if (obj.oldX == null && obj.oldY == null) { //jshint ignore:line
 					obj.oldX = current.x;
 					obj.oldY = current.y;
 				}
-				current.x = (!obj.lockX) ? current.x + mouse.x - obj.oldX : current.x;
-				current.y = (!obj.lockY) ? current.y + mouse.y - obj.oldY : current.y;
-				obj.oldX = mouse.x;
-				obj.oldY = mouse.y;
+				current.x = (!obj.lockX) ? current.x + v.x - obj.oldX : current.x;
+				current.y = (!obj.lockY) ? current.y + v.y - obj.oldY : current.y;
+				obj.oldX = v.x;
+				obj.oldY = v.y;
 			}
+			my.releaseVector(v);
 		},
-		stack: function() {}
+		stack: function() {
+			// console.log(this.name, 'POSITION.SETSTAMPUSINGPIVOTCALCULATIONS.STACK called');
+		}
 	};
 	/**
 Stamp helper function - correct mouse coordinates if pad dimensions not equal to base cell dimensions
@@ -3652,13 +3980,14 @@ Stamp helper function - correct mouse coordinates if pad dimensions not equal to
 @return Amended coordinate object
 **/
 	my.Position.prototype.correctCoordinates = function(coords, cell) {
+		// console.log(this.type, this.name, 'POSITION.CORRECTCOORDINATES called', coords, cell);
 		var vector,
 			pad,
 			w, h,
 			get = my.xtGet;
 		coords = my.safeObject(coords);
-		vector = my.work.v.set(coords);
 		if (scrawl.xta(coords.x, coords.y)) {
+			vector = my.requestVector(coords.x, coords.y, coords.z);
 			cell = (my.cell[cell]) ? my.cell[cell] : my.cell[my.pad[my.work.currentPad].base];
 			pad = my.pad[cell.pad];
 			w = get(pad.localWidth, pad.width, 300);
@@ -3693,6 +4022,7 @@ The core implementation of this object is a stub that supplies Pad objects with 
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 	my.PageElement = function(items) {
+		// console.log('PAGEELEMENT CONSTRUCTOR called');
 		return this;
 	};
 	my.PageElement.prototype = Object.create(my.Base.prototype);
@@ -3706,6 +4036,7 @@ The core implementation of this object is a stub that supplies Pad objects with 
 	my.PageElement.prototype.lib = 'object';
 	my.PageElement.prototype.libName = 'objectnames';
 	my.PageElement.prototype.preRegister = function(items){
+		// console.log(this.name, 'PAGEELEMENT.PREREGISTER called');
 		this.setLocalDimensions();
 	};
 	my.PageElement.prototype.postRegister = function(items){};
@@ -3793,6 +4124,7 @@ Element CSS position styling attribute
 	};
 	my.mergeInto(my.PageElement.prototype.defs, my.Base.prototype.defs);
 	my.PageElement.prototype.buildVectors = function(){
+		// console.log(this.name, 'PAGEELEMENT.BUILDVECTORS called');
 		this.dirty = {};
 		this.mice = {
 			mouse: my.makeVector()
@@ -3811,6 +4143,7 @@ Augments Base.get() to retrieve DOM element width and height values
 @return Attribute value
 **/
 	my.PageElement.prototype.get = function(item) {
+		// console.log(this.type, this.name, 'PAGEELEMENT.GET called', item);
 		var undef,
 			g = this.getters[item],
 			d, i, e;
@@ -3831,6 +4164,7 @@ Augments Base.get() to retrieve DOM element width and height values
 	};
 	my.PageElement.prototype.getters = {
 		width: function(e){
+		// console.log(this.name, 'PAGEELEMENT.GETTERS.WIDTH called');
 			if(typeof this.width !== 'undefined'){
 				return this.width;
 			}
@@ -3842,6 +4176,7 @@ Augments Base.get() to retrieve DOM element width and height values
 			}
 		},
 		height: function(e){
+		// console.log(this.name, 'PAGEELEMENT.GETTERS.HEIGHT called');
 			if(typeof this.height !== 'undefined'){
 				return this.height;
 			}
@@ -3865,6 +4200,7 @@ Augments Base.set() to allow the setting of DOM element dimension values
 @chainable
 **/
 	my.PageElement.prototype.set = function(items) {
+		// console.log(this.type, this.name, 'PAGEELEMENT.SET called', items);
 		var key, i, iz, s,
 			setters = this.setters,
 			keys = Object.keys(items),
@@ -3896,6 +4232,7 @@ Augments Base.set() to allow the setting of DOM element dimension values
 	};
 	my.PageElement.prototype.setters = {
 		scale: function(item){
+		// console.log(this.name, 'PAGEELEMENT.SETTERS.SCALE called');
 			var dirty = this.dirty;
 			this.scale = item;
 			dirty.setLocalDimensions = true;
@@ -3903,6 +4240,7 @@ Augments Base.set() to allow the setting of DOM element dimension values
 			dirty.setDisplayOffsets = true;
 		},
 		width: function(item){
+		// console.log(this.name, 'PAGEELEMENT.SETTERS.WIDTH called');
 			var dirty = this.dirty;
 			this.width = item;
 			dirty.setLocalDimensions = true;
@@ -3910,6 +4248,7 @@ Augments Base.set() to allow the setting of DOM element dimension values
 			dirty.setDisplayOffsets = true;
 		},
 		height: function(item){
+		// console.log(this.name, 'PAGEELEMENT.SETTERS.HEIGHT called');
 			var dirty = this.dirty;
 			this.height = item;
 			dirty.setLocalDimensions = true;
@@ -3917,6 +4256,7 @@ Augments Base.set() to allow the setting of DOM element dimension values
 			dirty.setDisplayOffsets = true;
 		},
 		pivot: function(item){
+		// console.log(this.name, 'PAGEELEMENT.SETTERS.PIVOT called');
 			this.pivot = item;
 			if (!this.pivot) {
 				delete this.oldX;
@@ -3924,14 +4264,17 @@ Augments Base.set() to allow the setting of DOM element dimension values
 			}
 		},
 		title: function(item){
+		// console.log(this.name, 'PAGEELEMENT.SETTERS.TITLE called');
 			this.title = item;
 			this.dirty.setAccessibility = true;
 		},
 		comment: function(item){
+		// console.log(this.name, 'PAGEELEMENT.SETTERS.COMMENT called');
 			this.comment = item;
 			this.dirty.setAccessibility = true;
 		},
 		interactive: function(item){
+		// console.log(this.name, 'PAGEELEMENT.SETTERS.INTERACTIVE called');
 			this.interactive = item;
 			this.removeMouseMove();
 			if (this.interactive) {
@@ -3948,6 +4291,7 @@ Handles the setting of DOM element title and data-comment attributes
 @chainable
 **/
 	my.PageElement.prototype.setAccessibility = function(items) {
+		// console.log(this.type, this.name, 'PAGEELEMENT.SETACCESSIBILITY called', items);
 		var el = this.getElement();
 		if(this.title){
 			el.title = this.title;
@@ -3965,6 +4309,7 @@ Calculate the DOM element's current display offset values
 @chainable
 **/
 	my.PageElement.prototype.setDisplayOffsets = function() {
+		// console.log(this.type, this.name, 'PAGEELEMENT.SETDISPLAYOFFSETS called');
 		var el = this.getElement(),
 			offsetX = 0,
 			offsetY = 0;
@@ -3988,6 +4333,7 @@ Scale DOM element dimensions (width, height)
 @chainable
 **/
 	my.PageElement.prototype.scaleDimensions = function(item) {
+		// console.log(this.type, this.name, 'PAGEELEMENT.SCALEDIMENSIONS called', item);
 		if (item.toFixed) {
 			this.scale = item;
 			this.setDimensions();
@@ -4002,6 +4348,7 @@ Helper function - set local dimensions (width, height)
 @private
 **/
 	my.PageElement.prototype.setLocalDimensions = function() {
+		// console.log(this.type, this.name, 'PAGEELEMENT.SETLOCALDIMENSIONS called');
 		var scale = this.scale;
 		this.localWidth = this.width * scale;
 		this.localHeight = this.height * scale;
@@ -4016,6 +4363,7 @@ Helper function - set DOM element dimensions (width, height)
 @private
 **/
 	my.PageElement.prototype.setDimensions = function() {
+		// console.log(this.type, this.name, 'PAGEELEMENT.SETDIMENSIONS called');
 		var el = this.getElement();
 		el.style.width = this.localWidth + 'px';
 		el.style.height = this.localHeight + 'px';
@@ -4043,8 +4391,8 @@ If an argument is supplied, then all currently existing mouse/touch vectors are 
 @return Vector, or an array of Vectors containing localized coordinates, with additional attributes; if mouse/touch has been disabled for the DOM element, returns false
 **/
 	my.PageElement.prototype.getMouse = function(item) {
-		var id, i, iz,
-			r = [];
+		// console.log(this.name, 'PAGEELEMENT.GETMOUSE called');
+		var id, i, iz, r;
 		if (my.xt(item)) {
 			// boolean true returns the element's mice object
 			if (my.xt(item) && my.isa_bool(item) && item) {
@@ -4053,6 +4401,7 @@ If an argument is supplied, then all currently existing mouse/touch vectors are 
 			// an event object returns an array of relevant vectors
 			else if (my.isa_event(item)) {
 				if (item.changedTouches) {
+					r = [];
 					for (i = 0, iz = item.changedTouches.length; i < iz; i++) {
 						id = 't' + item.changedTouches[i].identifier;
 						r.push(this.mice[id]);
@@ -4087,9 +4436,10 @@ If an argument is supplied, then all currently existing mouse/touch vectors are 
 @return Array - mouse id strings associated with event(s)
 **/
 	my.PageElement.prototype.getMouseIdFromEvent = function(item) {
-		var id, i, iz,
-			r = [];
+		// console.log(this.name, 'PAGEELEMENT.GETMOUSEIDFROMEVENT called');
+		var id, i, iz, r;
 		if (my.isa_event(item)) {
+			r = [];
 			if (item.changedTouches) {
 				for (i = 0, iz = item.changedTouches.length; i < iz; i++) {
 					id = 't' + item.changedTouches[i].identifier;
@@ -4120,6 +4470,7 @@ mousemove event listener function
 @private
 **/
 	my.PageElement.prototype.handleMouseMove = function(e) {
+		// console.log(this.name, 'PAGEELEMENT.HANDLEMOUSEMOVE called');
 		var mouseX, mouseY, maxX, maxY, wrapper, i, iz, j, jz, el, touches, newActive, id, altEl, altWrapper,
 			pad = my.pad,
 			stack = my.stack,
@@ -4128,7 +4479,8 @@ mousemove event listener function
 			al = my.work.activeListeners,
 			xt = my.xt,
 			vec = my.makeVector,
-			id2 = this.id;
+			id2 = this.id,
+			s;
 
 		if (xt(id2)) {
 			// invoked directly by DOM listeners
@@ -4144,7 +4496,6 @@ mousemove event listener function
 		// touch event(s)
 		if (e.changedTouches) {
 			touches = e.changedTouches;
-
 			// process each change in turn
 			for (i = 0, iz = touches.length; i < iz; i++) {
 				id = 't' + touches[i].identifier;
@@ -4160,9 +4511,9 @@ mousemove event listener function
 				}
 				// determine if a vector already exists for this touch
 				if (!xt(wrapper.mice[id])) {
-					wrapper.mice[id] = vec({
-						name: wrapper.type + '.' + wrapper.name + '.t.' + id
-					});
+					s = my.requestObject('name', wrapper.type + '.' + wrapper.name + '.t.' + id);
+					wrapper.mice[id] = vec(s);
+					my.releaseObject(s);
 					wrapper.mice[id].active = null;
 					wrapper.mice[id].id = id;
 				}
@@ -4227,9 +4578,9 @@ mousemove event listener function
 
 			// determine if a vector already exists for this pointer
 			if (!xt(wrapper.mice[id])) {
-				wrapper.mice[id] = vec({
-					name: wrapper.type + '.' + wrapper.name + '.p.' + id
-				});
+				s = my.requestObject('name', wrapper.type + '.' + wrapper.name + '.p.' + id);
+				wrapper.mice[id] = vec(s);
+				my.releaseObject(s);
 				wrapper.mice[id].active = null;
 				wrapper.mice[id].id = id;
 			}
@@ -4274,9 +4625,9 @@ mousemove event listener function
 		// mouse/pen event
 		else {
 			if (!xt(wrapper.mice.mouse)) {
-				wrapper.mice.mouse = vec({
-					name: wrapper.type + '.' + wrapper.name + '.ui.mouse'
-				});
+				s = my.requestObject('name', wrapper.type + '.' + wrapper.name + '.ui.mouse');
+				wrapper.mice.mouse = vec(s);
+				my.releaseObject(s);
 				wrapper.mice.mouse.active = null;
 				wrapper.mice.mouse.id = 'mouse';
 			}
@@ -4300,19 +4651,14 @@ mousemove event listener function
 				wrapper.mice.mouse.y = Math.round(wrapper.mice.mouse.y / (wrapper.scale || 1));
 			}
 		}
-		wrapper.handleMouseTilt(e);
 		return wrapper;
 	};
-	my.PageElement.prototype.pickupEntity = function(items) {};
-	my.PageElement.prototype.dropEntity = function(items) {};
-	/**
-mouseTilt hook function - amended by scrawlStacks extension
-@method handleMouseTilt
-@param {Object} e window.event
-@return This
-@private
-**/
-	my.PageElement.prototype.handleMouseTilt = function(e) {};
+	my.PageElement.prototype.pickupEntity = function(items) {
+		// console.log(this.type, this.name, 'PAGEELEMENT.PICKUPENTITY called', items);
+	};
+	my.PageElement.prototype.dropEntity = function(items) {
+		// console.log(this.type, this.name, 'PAGEELEMENT.DROPENTITY called', items);
+	};
 	/**
 Adds event listeners to the element
 @method addMouseMove
@@ -4321,6 +4667,7 @@ Adds event listeners to the element
 @private
 **/
 	my.PageElement.prototype.addMouseMove = function() {
+		// console.log(this.name, 'PAGEELEMENT.ADDMOUSEMOVE called');
 		var el = this.getElement();
 		my.addListener(['up', 'down', 'move', 'enter', 'leave'], this.handleMouseMove, el);
 		if (this.propogateTouch) {
@@ -4336,6 +4683,7 @@ Remove event listeners from the element
 @private
 **/
 	my.PageElement.prototype.removeMouseMove = function() {
+		// console.log(this.name, 'PAGEELEMENT.REMOVEMOUSEMOVE called');
 		var el = this.getElement();
 		my.removeListener(['up', 'down', 'move', 'enter', 'leave'], this.handleMouseMove, el);
 		if (this.propogateTouch) {
@@ -4374,11 +4722,11 @@ Because the Pad constructor calls the Cell constructor as part of the constructi
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 	my.Pad = function(items) {
+		// console.log('PAD CONSTRUCTOR called', items);
 		var get = my.xtGet,
 			d = my.Pad.prototype.defs;
 
-		items = (Object.prototype.toString.call(items) === '[object Object]') ? items : {};
-
+		items = my.safeObject(items);
 		if (my.isa_canvas(items.canvasElement)) {
 			items.width = get(items.width, items.canvasElement.width, d.width);
 			items.height = get(items.height, items.canvasElement.height, d.height);
@@ -4388,12 +4736,12 @@ Because the Pad constructor calls the Cell constructor as part of the constructi
 				this.name = this.name.replace(/___/g, '_');
 			}
 			this.buildVectors();
+			items.canvasElement.id = this.name;
+			this.register();
+			this.preRegister(items);
+			this.postRegister(items);
 			this.set(items);
 			this.setKeyAttributes();
-			items.canvasElement.id = this.name;
-			this.preRegister(items);
-			this.register();
-			this.postRegister(items);
 			this.cellsCompileOrder = [].concat(this.cells);
 			this.cellsShowOrder = [].concat(this.cells);
 			this.resortCompile = true;
@@ -4412,40 +4760,41 @@ Because the Pad constructor calls the Cell constructor as part of the constructi
 	my.Pad.prototype.lib = 'pad';
 	my.Pad.prototype.libName = 'padnames';
 	my.Pad.prototype.preRegister = function(items){
+		// console.log(this.name, 'PAD.PREREGISTER called');
 		var display,
 			base,
 			canvas,
 			pu = my.pushUnique,
-			makeCell = my.makeCell;
+			makeCell = my.makeCell,
+			s = my.requestObject();
 		this.dirty = {};
 		this.cells = [];
-		display = makeCell({
-			name: this.name,
-			pad: this.name,
-			canvas: items.canvasElement,
-			compiled: false,
-			shown: false,
-			width: this.localWidth,
-			height: this.localHeight
-		});
+		s.name = this.name;
+		s.pad = this.name;
+		s.canvas = items.canvasElement;
+		s.compiled = false;
+		s.shown = false;
+		s.width = this.localWidth;
+		s.height = this.localHeight;
+		display = makeCell(s);
 		pu(this.cells, display.name);
 		this.display = display.name;
 		canvas = items.canvasElement.cloneNode(true);
 		canvas.setAttribute('id', this.name + '_base');
-		base = makeCell({
-			name: this.name + '_base',
-			pad: this.name,
-			canvas: canvas,
-			compileOrder: 9999,
-			shown: false,
-			width: '100%',
-			height: '100%'
-		});
+		delete s.compiled;
+		s.name = this.name + '_base';
+		s.canvas = canvas;
+		s.compileOrder = 9;
+		s.width = '100%';
+		s.height = '100%';
+		base = makeCell(s);
+		my.releaseObject(s);
 		pu(this.cells, base.name);
 		this.base = base.name;
 		this.current = base.name;
 	};
 	my.Pad.prototype.postRegister = function(items){
+		// console.log(this.name, 'PAD.POSTREGISTER called');
 		this.setDisplayOffsets();
 		this.setAccessibility(items);
 		this.interactive = my.xtGet(items.interactive, true);
@@ -4500,6 +4849,7 @@ Retrieve Pad's visible &lt;canvas&gt; element object
 @private
 **/
 	my.Pad.prototype.getElement = function() {
+		// console.log(this.name, 'PAD.GETELEMENT called');
 		return my.canvas[this.display];
 	};
 	/**
@@ -4507,56 +4857,65 @@ Pad constructor hook function - modified by stacks extension
 @method stacksPadInit
 @private
 **/
-	my.Pad.prototype.stacksPadInit = function(items) {};
+	my.Pad.prototype.stacksPadInit = function(items) {
+		// console.log(this.name, 'PAD.STACKSPADINIT called', items);
+	};
 	my.Pad.prototype.setters = {
 		scale: function(item){
+		// console.log(this.name, 'PAD.SETTERS.SCALE called');
 			var dirty = this.dirty,
-				cell = my.cell;
+				cell = my.cell,
+				s;
 			this.scale = item;
 			dirty.setLocalDimensions = true;
 			dirty.setDimensions = true;
 			dirty.setDisplayOffsets = true;
-			cell[this.display].set({
-				scale: item
-			});
-			cell[this.base].set({
-				scale: item
-			});
+			s = my.requestObject('scale', item)
+			cell[this.display].set(s);
+			cell[this.base].set(s);
+			my.releaseObject(s);
 		},
 		width: function(item){
-			var dirty = this.dirty;
+		// console.log(this.name, 'PAD.SETTERS.WIDTH called');
+			var dirty = this.dirty,
+				s;
 			this.width = item;
 			this.setLocalDimensions();
-			my.cell[this.display].set({
-				pasteWidth: this.localWidth
-			});
+			s = my.requestObject('pasteWidth', this.localWidth);
+			my.cell[this.display].set(s);
+			my.releaseObject(s);
 			dirty.setDimensions = true;
 			dirty.setDisplayOffsets = true;
 		},
 		height: function(item){
-			var dirty = this.dirty;
+		// console.log(this.name, 'PAD.SETTERS.HEIGHT called');
+			var dirty = this.dirty,
+				s;
 			this.height = item;
 			this.setLocalDimensions();
-			my.cell[this.display].set({
-				pasteHeight: this.localHeight
-			});
+			s = my.requestObject('pasteWidth', this.localHeight);
+			my.cell[this.display].set(s);
+			my.releaseObject(s);
 			dirty.setDimensions = true;
 			dirty.setDisplayOffsets = true;
 		},
 		backgroundColor: function(item){
-			my.cell[this.base].set({
-				backgroundColor: item
-			});
+		// console.log(this.name, 'PAD.SETTERS.BACKGROUNDCOLOR called');
+			var s = my.requestObject('backgroundColor', item);
+			my.cell[this.base].set(s);
+			my.releaseObject(s);
 		},
 		globalAlpha: function(item){
-			my.cell[this.base].set({
-				globalAlpha: item
-			});
+		// console.log(this.name, 'PAD.SETTERS.GLOBALALPHA called');
+			var s = my.requestObject('globalAlpha', item);
+			my.cell[this.base].set(s);
+			my.releaseObject(s);
 		},
 		globalCompositeOperation: function(item){
-			my.cell[this.base].set({
-				globalCompositeOperation: item
-			});
+		// console.log(this.name, 'PAD.SETTERS.GLOBALCOMPOSITEOPERATION called');
+			var s = my.requestObject('globalCompositeOperation', item);
+			my.cell[this.base].set(s);
+			my.releaseObject(s);
 		},
 	};
 	my.mergeInto(my.Pad.prototype.setters, my.PageElement.prototype.setters);
@@ -4566,7 +4925,9 @@ Pad constructor hook function - amended by Stacks extension
 @return Nothing
 @private
 **/
-	my.Pad.prototype.padStacksConstructor = function() {};
+	my.Pad.prototype.padStacksConstructor = function() {
+		// console.log(this.name, 'PAD.PADSTACKSCONSTRUCTOR called');
+	};
 	/**
 Display function sorting routine - cells are sorted according to their compileOrder attribute value, in ascending order
 @method sortCellsCompile
@@ -4574,6 +4935,7 @@ Display function sorting routine - cells are sorted according to their compileOr
 @private
 **/
 	my.Pad.prototype.sortCellsCompile = function() {
+		// console.log(this.name, 'PAD.SORTCELLSCOMPILE called');
 		if (this.resortCompile) {
 			this.resortCompile = false;
 			this.cellsCompileOrder = my.bucketSort('cell', 'compileOrder', this.cellsCompileOrder);
@@ -4586,6 +4948,7 @@ Display function sorting routine - cells are sorted according to their showOrder
 @private
 **/
 	my.Pad.prototype.sortCellsShow = function() {
+		// console.log(this.name, 'PAD.SORTCELLSSHOW called');
 		if (this.resortShow) {
 			this.resortShow = false;
 			this.cellsShowOrder = my.bucketSort('cell', 'showOrder', this.cellsShowOrder);
@@ -4601,6 +4964,7 @@ Cells with cleared = true will clear theid displays in preparation for compile/s
 @chainable
 **/
 	my.Pad.prototype.clear = function() {
+		// console.log(this.name, 'PAD.CLEAR called');
 		var current,
 			cells = this.cells,
 			cell = my.cell,
@@ -4628,12 +4992,14 @@ By default:
 @chainable
 **/
 	my.Pad.prototype.compile = function(mouse) {
+		// console.log(this.name, 'PAD.COMPILE called');
 		var cell = my.cell,
-			cells = this.cellsCompileOrder,
+			cells,
 			current,
 			i,
 			iz;
 		this.sortCellsCompile();
+		cells = this.cellsCompileOrder;
 		for (i = 0, iz = cells.length; i < iz; i++) {
 			current = cell[cells[i]];
 			if (current.rendered && current.compiled) {
@@ -4656,6 +5022,7 @@ By default, the initial base and display canvases have shown = false:
 @chainable
 **/
 	my.Pad.prototype.show = function() {
+		// console.log(this.name, 'PAD.SHOW called');
 		var display,
 			base,
 			cell,
@@ -4683,6 +5050,7 @@ Display function - Pad tells its associated Cell objects to undertake a complete
 @chainable
 **/
 	my.Pad.prototype.render = function(mouse) {
+		// console.log(this.name, 'PAD.RENDER called');
 		this.clear();
 		this.compile(mouse);
 		this.show();
@@ -4705,6 +5073,7 @@ Create a new (hidden) &lt;canvas&gt; element and associated Cell wrapper, and ad
         });
 **/
 	my.Pad.prototype.addNewCell = function(data) {
+		// console.log(this.name, 'PAD.ADDNEWCELL called');
 		var canvas,
 			cell,
 			pu = my.pushUnique;
@@ -4736,6 +5105,7 @@ Associate existing &lt;canvas&gt; elements, and their Cell wrappers, with this P
 @chainable
 **/
 	my.Pad.prototype.addCells = function() {
+		// console.log(this.name, 'PAD.ADDCELLS called');
 		var slice,
 			i,
 			iz,
@@ -4765,6 +5135,7 @@ _Note: does not delete the canvas, or the Cell object, from the scrawl library_
 @chainable
 **/
 	my.Pad.prototype.deleteCell = function(cell) {
+		// console.log(this.name, 'PAD.DELETECELL called');
 		var ri = my.removeItem;
 		if (cell.substring) {
 			ri(this.cells, cell);
@@ -4798,6 +5169,7 @@ Set scrawl.currentPad attribute to this Pad's PADNAME String
         }).makeCurrent();
 **/
 	my.Pad.prototype.makeCurrent = function() {
+		// console.log(this.name, 'PAD.MAKECURRENT called');
 		my.work.currentPad = this.name;
 		return this;
 	};
@@ -4813,6 +5185,7 @@ Augments PageElement.setAccessibility(); handles the setting of &lt;canvas&gt; e
 @chainable
 **/
 	my.Pad.prototype.setAccessibility = function(items) {
+		// console.log(this.name, 'PAD.SETACCESSIBILITY called', items);
 		var el = this.getElement();
 		if(this.title){
 			el.title = this.title;
@@ -4832,6 +5205,7 @@ Overrides PageElement.setDimensions(); &lt;canvas&gt; elements do not use stylin
 @chainable
 **/
 	my.Pad.prototype.setDimensions = function() {
+		// console.log(this.name, 'PAD.SETDIMENSIONS called');
 		var element = this.getElement();
 		element.width = this.localWidth;
 		element.height = this.localHeight;
@@ -4872,6 +5246,7 @@ _Note: A Cell is entirely responsible for determining what portion of its &lt;ca
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 	my.Cell = function(items) {
+		// console.log('CELL CONSTRUCTOR called', items);
 		items = my.safeObject(items);
 		if (my.xt(items.canvas)) { //flag used by Pad constructor when calling Cell constructor
 			this.init(items);
@@ -4890,6 +5265,7 @@ _Note: A Cell is entirely responsible for determining what portion of its &lt;ca
 	my.Cell.prototype.libName = 'cellnames';
 	my.Cell.prototype.cloneExcludedAttributes = my.mergeArraysUnique(my.Position.prototype.cloneExcludedAttributes, ['copyData', 'pasteData', 'context', 'copy']);
 	my.Cell.prototype.cloneAmendments = function(a, b) {
+		// console.log(this.name, 'CELL.CLONEAMENDMENTS called');
 		var get = my.xtGet,
 			xt = my.xt;
 		if(!xt(a.start)){
@@ -5072,7 +5448,6 @@ Array of GROUPNAMES that contribute to building this Cell's scene
 @type Array
 @default []
 **/
-		groups: [],
 		/**
 Display cycle flag - on true (default), the cell will take part in the display cycle
 @property rendered
@@ -5123,23 +5498,22 @@ Cell constructor hook function - core module
 @private
 **/
 	my.Cell.prototype.buildVectors = function() {
-		var vec = my.makeVector;
-		this.start = vec({
-			name: this.type + '.' + this.name + '.start'
-		});
-		this.currentStart = vec({
-			name: this.type + '.' + this.name + '.current.start'
-		});
+		// console.log(this.name, 'CELL.BUILDVECTORS called');
+		var vec = my.makeVector,
+			s = my.requestObject();
+		s.name = this.type + '.' + this.name + '.start';
+		this.start = vec(s);
+		s.name = this.type + '.' + this.name + '.current.start';
+		this.currentStart = vec(s);
 		this.currentStart.flag = false;
-		this.handle = vec({
-			name: this.type + '.' + this.name + '.handle'
-		});
-		this.currentHandle = vec({
-			name: this.type + '.' + this.name + '.current.handle'
-		});
-		this.copy = vec({
-			name: this.type + '.' + this.name + '.copy'
-		});
+		s.name = this.type + '.' + this.name + '.handle';
+		this.handle = vec(s);
+		s.name = this.type + '.' + this.name + '.current.handle';
+		this.currentHandle = vec(s);
+		this.currentHandle.flag = false;
+		s.name = this.type + '.' + this.name + '.copy';
+		this.copy = vec(s);
+		my.releaseObject(s);
 		this.copyData = {
 			x: 0,
 			y: 0,
@@ -5154,17 +5528,23 @@ Cell constructor hook function - core module
 			h: 0,
 			flag: false
 		};
-	my.Cell.prototype.preRegister = function(items){};
+	};
+	my.Cell.prototype.preRegister = function(items){
+		// console.log(this.name, 'CELL.PREREGISTER called');
+	};
 	my.Cell.prototype.register = function(canvas){
+		// console.log(this.name, 'CELL.REGISTER called');
 		my.canvas[this.name] = canvas;
 		my.context[this.name] = canvas.getContext('2d');
 		my.cell[this.name] = this;
 		my.pushUnique(my.cellnames, this.name);
 	};
-	my.Cell.prototype.postRegister = function(items){};
+	my.Cell.prototype.postRegister = function(items){
+		// console.log(this.name, 'CELL.POSTREGISTER called');
 	};
 	my.Cell.prototype.init = function(items) {
-		var temp,
+		// console.log('CELL.INIT called');
+		var temp, i, iz,
 			context,
 			group,
 			d = my.Cell.prototype.defs,
@@ -5172,9 +5552,11 @@ Cell constructor hook function - core module
 			xto = my.xto,
 			get = my.xtGet,
 			vec = my.makeVector,
-			canvas;
+			pu = my.pushUnique,
+			canvas,
+			s;
 
-		items = (Object.prototype.toString.call(items) === '[object Object]') ? items : {};
+		items = my.safeObject(items);
 		this.makeName(items.name);
 		delete items.name;
 		this.buildVectors();
@@ -5197,27 +5579,34 @@ Cell constructor hook function - core module
 			this.pasteWidth = get(items.pasteWidth, items.width, this.pasteWidth);
 			this.pasteHeight = get(items.pasteHeight, items.height, this.pasteHeight);
 		}
-		this.groups = (xt(items.groups)) ? [].concat(items.groups) : []; //must be set
+		this.groups = [];
 		this.setDimensionsFlag = true;
-		this.sortGroupsFlag = true;
 		this.dirtyHandlesFlag = true;
 		this.dirtyStartsFlag = true;
-		group = my.makeGroup({
-			name: this.name,
-			cell: this.name
-		});
-		this.groups.push(group.name);
+		s = my.requestObject('name', this.name, 'cell', this.name);
+		group = my.makeGroup(s);
+		my.releaseObject(s);
+		if(xt(items.groups)){
+			temp = [].concat(items.groups);
+			for(i = 0, iz = temp.length; i < iz; i++){
+				if(temp[i].substring){
+					pu(this.groups, temp[i]);
+				}
+			}
+		}
 		this.postRegister(items);
 		return items;
 	};
 	my.Cell.prototype.addContext = function(items){
-		var context = my.makeContext({
-			name: this.name,
-			cell: my.context[this.name]
-		});
+		// console.log(this.name, 'CELL.ADDCONTEXT called', items);
+		var context, 
+			s = my.requestObject('name', this.name, 'cell', my.context[this.name]);
+		context = my.makeContext(s);
+		my.releaseObject(s);
 		this.context = context.name;
 	};
 	my.Cell.prototype.get = function(item) {
+		// console.log(this.name, 'CELL.GET called', item);
 		var undef,
 			g = this.getters[item],
 			d, i;
@@ -5240,43 +5629,54 @@ Cell constructor hook function - core module
 	};
 	my.Cell.prototype.getters = {
 		pasteX: function(){
+		// console.log(this.name, 'CELL.GETTERS.PASTEX called');
 			return this.start.x;
 		},
 		pasteY: function(){
+		// console.log(this.name, 'CELL.GETTERS.PASTEY called');
 			return this.start.y;
 		},
 		copyX: function(){
+		// console.log(this.name, 'CELL.GETTERS.COPYX called');
 			return this.copy.x;
 		},
 		copyY: function(){
+		// console.log(this.name, 'CELL.GETTERS.COPYY called');
 			return this.copy.y;
 		},
 		paste: function(){
+		// console.log(this.name, 'CELL.GETTERS.PASTE called');
 			return this.start.getVector();
 		},
 		copy: function(){
+		// console.log(this.name, 'CELL.GETTERS.COPY called');
 			return this.copy.getVector();
 		},
 		width: function(){
+		// console.log(this.name, 'CELL.GETTERS.WIDTH called');
 			return this.actualWidth;
 		},
 		height: function(){
+		// console.log(this.name, 'CELL.GETTERS.HEIGHT called');
 			return this.actualHeight;
 		},
 	};
 	my.mergeInto(my.Cell.prototype.getters, my.Position.prototype.getters);
 	my.Cell.prototype.setters = {
 		startX: function(item){
+			// console.log(this.name, 'CELL.SETTERS.STARTX called');
 			this.start.x = item;
 			this.currentStart.flag = false;
 			this.dirtyStartsFlag = true;
 		},
 		startY: function(item){
+			// console.log(this.name, 'CELL.SETTERS.STARTY called');
 			this.start.y = item;
 			this.currentStart.flag = false;
 			this.dirtyStartsFlag = true;
 		},
 		start: function(item){
+			// console.log(this.name, 'CELL.SETTERS.START called');
 			if(typeof item.x !== 'undefined'){
 				this.start.x = item.x;
 			}
@@ -5287,16 +5687,19 @@ Cell constructor hook function - core module
 			this.dirtyStartsFlag = true;
 		},
 		pasteX: function(item){
+			// console.log(this.name, 'CELL.SETTERS.PASTEX called');
 			this.start.x = item;
 			this.currentStart.flag = false;
 			this.dirtyStartsFlag = true;
 		},
 		pasteY: function(item){
+			// console.log(this.name, 'CELL.SETTERS.PASTEY called');
 			this.start.y = item;
 			this.currentStart.flag = false;
 			this.dirtyStartsFlag = true;
 		},
 		paste: function(item){
+			// console.log(this.name, 'CELL.SETTERS.PASTE called');
 			if(typeof item.x !== 'undefined'){
 				this.start.x = item.x;
 			}
@@ -5307,12 +5710,15 @@ Cell constructor hook function - core module
 			this.dirtyStartsFlag = true;
 		},
 		copyX: function(item){
+			// console.log(this.name, 'CELL.SETTERS.COPYX called');
 			this.copy.x = item;
 		},
 		copyY: function(item){
+			// console.log(this.name, 'CELL.SETTERS.COPYY called');
 			this.copy.y = item;
 		},
 		copy: function(item){
+			// console.log(this.name, 'CELL.SETTERS.COPY called');
 			var copy = this.copy;
 			if(typeof item.x !== 'undefined'){
 				copy.x = item.x;
@@ -5322,14 +5728,17 @@ Cell constructor hook function - core module
 			}
 		},
 		pasteWidth: function(item){
+			// console.log(this.name, 'CELL.SETTERS.PASTEWIDTH called');
 			this.pasteWidth = item;
 			this.dirtyHandlesFlag = true;
 		},
 		pasteHeight: function(item){
+			// console.log(this.name, 'CELL.SETTERS.PASTEHEIGHT called');
 			this.pasteHeight = item;
 			this.dirtyHandlesFlag = true;
 		},
 		actualWidth: function(item){
+			// console.log(this.name, 'CELL.SETTERS.ACTUALWIDTH called');
 			var pad = my.pad[this.pad];
 			if (pad) {
 				if (item.substring) {
@@ -5341,6 +5750,7 @@ Cell constructor hook function - core module
 			this.setDimensionsFlag = true;
 		},
 		actualHeight: function(item){
+			// console.log(this.name, 'CELL.SETTERS.ACTUALHEIGHT called');
 			var pad = my.pad[this.pad];
 			if (pad) {
 				if (item.substring) {
@@ -5352,32 +5762,41 @@ Cell constructor hook function - core module
 			this.setDimensionsFlag = true;
 		},
 		width: function(item){
-			this.width = item;
-			this.copyWidth = item;
-			this.pasteWidth = item;
-			this.setters.actualWidth(item);
-			this.dirtyHandlesFlag = true;
-			this.setDimensionsFlag = true;
+			// console.log(this.name, 'CELL.SETTERS.WIDTH called', item);
+			if(item){
+				this.width = item;
+				this.copyWidth = item;
+				this.pasteWidth = item;
+				my.Cell.prototype.setters.actualWidth.call(this, item);
+				this.dirtyHandlesFlag = true;
+				this.setDimensionsFlag = true;
+			}
 		},
 		height: function(item){
-			this.height = item;
-			this.copyHeight = item;
-			this.pasteHeight = item;
-			this.setters.actualHeight(item);
-			this.dirtyHandlesFlag = true;
-			this.setDimensionsFlag = true;
+			// console.log(this.name, 'CELL.SETTERS.HEIGHT called', item);
+			if(item){
+				this.height = item;
+				this.copyHeight = item;
+				this.pasteHeight = item;
+				my.Cell.prototype.setters.actualHeight.call(this, item);
+				this.dirtyHandlesFlag = true;
+				this.setDimensionsFlag = true;
+			}
 		},
 		handleX: function(item){
+			// console.log(this.name, 'CELL.SETTERS.HANDLEX called');
 			this.handle.x = item;
 			this.currentHandle.flag = false;
 			this.dirtyHandlesFlag = true;
 		},
 		handleY: function(item){
+			// console.log(this.name, 'CELL.SETTERS.HANDLEY called');
 			this.handle.y = item;
 			this.currentHandle.flag = false;
 			this.dirtyHandlesFlag = true;
 		},
 		handle: function(item){
+			// console.log(this.name, 'CELL.SETTERS.HANDLE called');
 			if(typeof item.x !== 'undefined'){
 				this.handle.x = item.x;
 			}
@@ -5388,20 +5807,42 @@ Cell constructor hook function - core module
 			this.dirtyHandlesFlag = true;
 		},
 		scale: function(item){
+			// console.log(this.name, 'CELL.SETTERS.SCALE called');
 			this.scale = item;
 			this.dirtyHandlesFlag = true;
 		},
 		compileOrder: function(item){
+			// console.log(this.name, 'CELL.SETTERS.COMPILEORDER called');
 			this.compileOrder = item;
 			my.pad[this.pad].resortCompile = true;
 		},
 		showOrder: function(item){
+			// console.log(this.name, 'CELL.SETTERS.SHOWORDER called');
 			this.showOrder = item;
 			my.pad[this.pad].resortShow = true;
 		},
 		resolve: function(item){
+			// console.log(this.name, 'CELL.SETTERS.RESOLVE called');
 			this.copyData.flag = false;
 			this.pasteData.flag = false;
+		},
+		groups: function(item){
+			// console.log(this.name, '!!!!!~~~~~ CELL.SETTERS.GROUPS called', item);
+			var group, i, iz, flag = false;
+			if(item.substring){
+				item = my.requestArray(item);
+				flag = true;
+			}
+			for(i = 0, iz = item.length; i < iz; i++){
+				group = item[i];
+				if(group.substring){
+					my.pushUnique(this.groups, group);
+				}
+			}
+			this.sortGroupsFlag = true;
+			if(flag){
+				my.releaseArray(item);
+			}
 		},
 	};
 	my.mergeInto(my.Cell.prototype.setters, my.Position.prototype.setters);
@@ -5413,6 +5854,7 @@ Augments Cell.set()
 @private
 **/
 	my.Cell.prototype.setDirtyStarts = function() {
+		// console.log(this.name, 'CELL.SETDIRTYSTARTS called');
 		var group = my.group,
 			groups = this.groups,
 			g, i, iz;
@@ -5423,6 +5865,7 @@ Augments Cell.set()
 			}
 		}
 		this.currentStart.flag = false;
+		this.dirtyStartsFlag = false;
 		return this;
 	};
 	/**
@@ -5433,6 +5876,7 @@ Augments Cell.set()
 @private
 **/
 	my.Cell.prototype.setDirtyHandles = function() {
+		// console.log(this.name, 'CELL.SETDIRTYHANDLES called');
 		var group = my.group,
 			groups = this.groups,
 			g, i, iz;
@@ -5443,34 +5887,42 @@ Augments Cell.set()
 			}
 		}
 		this.currentHandle.flag = false;
+		this.dirtyHandlesFlag = false;
 		return this;
 	};
 	my.Cell.prototype.deltaSetters = {
 		startX: function(item){
+		// console.log(this.name, 'CELL.DELTASETTERS.STARTX called');
 			my.Position.prototype.deltaSetters.startX.call(this, item);
 			this.dirtyStartsFlag = true;
 		},
 		startY: function(item){
+		// console.log(this.name, 'CELL.DELTASETTERS.STARTY called');
 			my.Position.prototype.deltaSetters.startY.call(this, item);
 			this.dirtyStartsFlag = true;
 		},
 		start: function(item){
+		// console.log(this.name, 'CELL.DELTASETTERS.START called');
 			my.Position.prototype.deltaSetters.start.call(this, item);
 			this.dirtyStartsFlag = true;
 		},
 		pasteX: function(item){
+		// console.log(this.name, 'CELL.DELTASETTERS.PASTEX called');
 			my.Position.prototype.deltaSetters.startX.call(this, item);
 			this.dirtyStartsFlag = true;
 		},
 		pasteY: function(item){
+		// console.log(this.name, 'CELL.DELTASETTERS.PASTEY called');
 			my.Position.prototype.deltaSetters.startY.call(this, item);
 			this.dirtyStartsFlag = true;
 		},
 		paste: function(item){
+		// console.log(this.name, 'CELL.DELTASETTERS.PASTE called');
 			my.Position.prototype.deltaSetters.start.call(this, item);
 			this.dirtyStartsFlag = true;
 		},
 		copyX: function(item){
+		// console.log(this.name, 'CELL.DELTASETTERS.COPYX called');
 			var copy = this.copy;
 			if(copy.x.substring || item.substring){
 				copy.x = parseFloat(copy.x) + parseFloat(item) + '%';
@@ -5480,6 +5932,7 @@ Augments Cell.set()
 			}
 		},
 		copyY: function(item){
+		// console.log(this.name, 'CELL.DELTASETTERS.COPYY called');
 			var copy = this.copy;
 			if(copy.y.substring || item.substring){
 				copy.y = parseFloat(copy.y) + parseFloat(item) + '%';
@@ -5489,6 +5942,7 @@ Augments Cell.set()
 			}
 		},
 		copy: function(item){
+		// console.log(this.name, 'CELL.DELTASETTERS.COPY called');
 			var copy = this.copy;
 			if(typeof item.x !== 'undefined'){
 				if(copy.x.substring || item.substring){
@@ -5508,23 +5962,28 @@ Augments Cell.set()
 			}
 		},
 		handleX: function(item){
+		// console.log(this.name, 'CELL.DELTASETTERS.HANDLEX called');
 			my.Position.prototype.deltaSetters.handleX.call(this, item);
 			this.dirtyHandlesFlag = true;
 		},
 		handleY: function(item){
+		// console.log(this.name, 'CELL.DELTASETTERS.HANDLEY called');
 			my.Position.prototype.deltaSetters.handleY.call(this, item);
 			this.dirtyHandlesFlag = true;
 		},
 		handle: function(item){
+		// console.log(this.name, 'CELL.DELTASETTERS.HANDLE called');
 			my.Position.prototype.deltaSetters.handle.call(this, item);
 			this.dirtyHandlesFlag = true;
 		},
 		scale: function(item){
+		// console.log(this.name, 'CELL.DELTASETTERS.SCALE called');
 			this.scale += item;
 			this.currentHandle.flag = false;
 			this.dirtyHandlesFlag = true;
 		},
 		copyWidth: function(item){
+		// console.log(this.name, 'CELL.DELTASETTERS.COPYWIDTH called');
 			if(this.copyWidth.substring || item.substring){
 				this.copyWidth = parseFloat(this.copyWidth) + parseFloat(item) + '%';
 			}
@@ -5533,6 +5992,7 @@ Augments Cell.set()
 			}
 		},
 		pasteWidth: function(item){
+		// console.log(this.name, 'CELL.DELTASETTERS.PASTEWIDTH called');
 			if(this.pasteWidth.substring || item.substring){
 				this.pasteWidth = parseFloat(this.pasteWidth) + parseFloat(item) + '%';
 			}
@@ -5542,6 +6002,7 @@ Augments Cell.set()
 			this.dirtyHandlesFlag = true;
 		},
 		actualWidth: function(item){
+		// console.log(this.name, 'CELL.DELTASETTERS.ACTUALWIDTH called');
 			var pad = my.pad[this.pad];
 			if (pad) {
 				if (item.substring) {
@@ -5553,6 +6014,7 @@ Augments Cell.set()
 			this.setDimensionsFlag = true;
 		},
 		width: function(item){
+		// console.log(this.name, 'CELL.DELTASETTERS.WIDTH called');
 			this.deltaSetters.copyWidth(item);
 			this.deltaSetters.pasteWidth(item);
 			this.deltaSetters.actualWidth(item);
@@ -5566,6 +6028,7 @@ Augments Cell.set()
 			this.setDimensionsFlag = true;
 		},
 		copyHeight: function(item){
+		// console.log(this.name, 'CELL.DELTASETTERS.COPYHEIGHT called');
 			if(this.copyHeight.substring || item.substring){
 				this.copyHeight = parseFloat(this.copyHeight) + parseFloat(item) + '%';
 			}
@@ -5574,6 +6037,7 @@ Augments Cell.set()
 			}
 		},
 		pasteHeight: function(item){
+		// console.log(this.name, 'CELL.DELTASETTERS.PASTEHEIGHT called');
 			if(this.pasteHeight.substring || item.substring){
 				this.pasteHeight = parseFloat(this.pasteHeight) + parseFloat(item) + '%';
 			}
@@ -5583,6 +6047,7 @@ Augments Cell.set()
 			this.dirtyHandlesFlag = true;
 		},
 		actualHeight: function(item){
+		// console.log(this.name, 'CELL.DELTASETTERS.ACTUALHEIGHT called');
 			var pad = my.pad[this.pad];
 			if (pad) {
 				if (item.substring) {
@@ -5594,6 +6059,7 @@ Augments Cell.set()
 			this.setDimensionsFlag = true;
 		},
 		height: function(item){
+		// console.log(this.name, 'CELL.DELTASETTERS.HEIGHT called');
 			this.deltaSetters.copyWidth(item);
 			this.deltaSetters.pasteWidth(item);
 			this.deltaSetters.actualWidth(item);
@@ -5607,6 +6073,7 @@ Augments Cell.set()
 			this.setDimensionsFlag = true;
 		},
 		resolve: function(item){
+		// console.log(this.name, 'CELL.DELTASETTERS.RESOLVE called');
 			this.copyData.flag = false;
 			this.pasteData.flag = false;
 		},
@@ -5619,7 +6086,9 @@ Set the Cell's &lt;canvas&gt; context engine to the specification supplied by th
 @return Entity object
 @private
 **/
+	my.work.cellSetEngine = ['Gradient', 'RadialGradient', 'Pattern'];
 	my.Cell.prototype.setEngine = function(entity) {
+		// console.log(this.name, 'CELL.SETENGINE called', (entity) ? entity.name : 'noEntity');
 		var cellContext,
 			entityContext,
 			cellEngine,
@@ -5629,7 +6098,7 @@ Set the Cell's &lt;canvas&gt; context engine to the specification supplied by th
 			eName,
 			ctx = my.ctx,
 			action = this.setEngineActions,
-			stat1 = ['Gradient', 'RadialGradient', 'Pattern'],
+			stat1 = my.work.cellSetEngine,
 			i, iz, key, item;
 		if (!entity.fastStamp) {
 			cellContext = ctx[this.context];
@@ -5647,11 +6116,13 @@ Set the Cell's &lt;canvas&gt; context engine to the specification supplied by th
 					cellContext[key] = item;
 				}
 			}
+			my.releaseObject(changes);
 		}
 		return entity;
 	};
 	my.Cell.prototype.setEngineActions = {
 		fillStyle: function(item, e, s, entity, cell) {
+			// console.log(this.name, 'CELL.SETENGINEACTIONS.FILLSTYLE called', (entity) ? entity : 'noEntity', (cell) ? cell : 'noCell', s);
 			var design = my.design[item];
 			e.fillStyle = item;
 			if (design) {
@@ -5662,44 +6133,57 @@ Set the Cell's &lt;canvas&gt; context engine to the specification supplied by th
 			}
 		},
 		font: function(item, e) {
+			// console.log(this.name, 'CELL.SETENGINEACTIONS.FONT called');
 			e.font = item;
 		},
 		globalAlpha: function(item, e) {
+			// console.log(this.name, 'CELL.SETENGINEACTIONS.GLOBALALPHA called');
 			e.globalAlpha = item;
 		},
 		globalCompositeOperation: function(item, e) {
+			// console.log(this.name, 'CELL.SETENGINEACTIONS.GLOBALCOMPOSITEOPERATION called');
 			e.globalCompositeOperation = item;
 		},
 		lineCap: function(item, e) {
+			// console.log(this.name, 'CELL.SETENGINEACTIONS.LINECAP called');
 			e.lineCap = item;
 		},
 		lineDash: function(item, e) {
+			// console.log(this.name, 'CELL.SETENGINEACTIONS.LINEDASH called');
 			if (e.setLineDash) {
 				e.setLineDash(item);
 			}
 		},
 		lineDashOffset: function(item, e) {
+			// console.log(this.name, 'CELL.SETENGINEACTIONS.LINEDASHOFFSET called');
 			e.lineDashOffset = item;
 		},
 		lineJoin: function(item, e) {
+			// console.log(this.name, 'CELL.SETENGINEACTIONS.LINEJOIN called');
 			e.lineJoin = item;
 		},
 		lineWidth: function(item, e) {
+			// console.log(this.name, 'CELL.SETENGINEACTIONS.LINEWIDTH called');
 			e.lineWidth = item;
 		},
 		shadowBlur: function(item, e) {
+			// console.log(this.name, 'CELL.SETENGINEACTIONS.SHADOWBLUR called');
 			e.shadowBlur = item;
 		},
 		shadowColor: function(item, e) {
+			// console.log(this.name, 'CELL.SETENGINEACTIONS.SHADOWCOLOR called');
 			e.shadowColor = item;
 		},
 		shadowOffsetX: function(item, e) {
+			// console.log(this.name, 'CELL.SETENGINEACTIONS.SHADOWOFFSETX called');
 			e.shadowOffsetX = item;
 		},
 		shadowOffsetY: function(item, e) {
+			// console.log(this.name, 'CELL.SETENGINEACTIONS.SHADOWOFFSETY called');
 			e.shadowOffsetY = item;
 		},
 		strokeStyle: function(item, e, s, entity, cell) {
+			// console.log(this.name, 'CELL.SETENGINEACTIONS.STROKESTYLE called');
 			var design = my.design[item];
 			e.strokeStyle = item;
 			if (design) {
@@ -5710,15 +6194,20 @@ Set the Cell's &lt;canvas&gt; context engine to the specification supplied by th
 			}
 		},
 		miterLimit: function(item, e) {
+			// console.log(this.name, 'CELL.SETENGINEACTIONS.MITRELIMIT called');
 			e.miterLimit = item;
 		},
 		textAlign: function(item, e) {
+			// console.log(this.name, 'CELL.SETENGINEACTIONS.TEXTALIGN called');
 			e.textAlign = item;
 		},
 		textBaseline: function(item, e) {
+			// console.log(this.name, 'CELL.SETENGINEACTIONS.TEXTBASELINE called');
 			e.textBaseline = item;
 		},
-		winding: function() {}
+		winding: function() {
+			// console.log(this.name, 'CELL.SETENGINEACTIONS.WINDING called');
+		}
 	};
 	/**
 groupSort
@@ -5727,6 +6216,7 @@ groupSort
 @private
 **/
 	my.Cell.prototype.groupSort = function() {
+		// console.log(this.name, 'CELL.GROUPSORT called');
 		this.sortGroupsFlag = false;
 		this.groups = my.bucketSort('group', 'order', this.groups);
 	};
@@ -5737,6 +6227,7 @@ Clear the Cell's &lt;canvas&gt; element using JavaScript ctx.clearRect()
 @chainable
 **/
 	my.Cell.prototype.clear = function() {
+		// console.log(this.name, 'CELL.CLEAR called');
 		var cellContext,
 			w = this.actualWidth,
 			h = this.actualHeight,
@@ -5764,6 +6255,7 @@ Prepare to draw entitys onto the Cell's &lt;canvas&gt; element, in line with the
 @chainable
 **/
 	my.Cell.prototype.compile = function(mouse) {
+		// console.log(this.name, 'CELL.COMPILE called');
 		var group,
 			i,
 			iz;
@@ -5796,6 +6288,7 @@ Cell copy helper function
 @private
 **/
 	my.Cell.prototype.rotateDestination = function(engine) {
+		// console.log(this.name, 'CELL.ROTATEDESTINATION called');
 		var reverse = (this.flipReverse) ? -1 : 1,
 			upend = (this.flipUpend) ? -1 : 1,
 			cos,
@@ -5821,6 +6314,7 @@ Cell copy helper function
 @private
 **/
 	my.Cell.prototype.prepareToCopyCell = function(engine) {
+		// console.log(this.name, 'CELL.PREPARETOCOPYCELL called');
 		var data = this.pasteData;
 		if (this.pivot) {
 			this.setStampUsingPivot(my.pad[this.pad].base);
@@ -5842,7 +6336,9 @@ Cell.prepareToCopyCell hook function - modified by path extension
 @method pathPrepareToCopyCell
 @private
 **/
-	my.Cell.prototype.pathPrepareToCopyCell = function() {};
+	my.Cell.prototype.pathPrepareToCopyCell = function() {
+		// console.log(this.name, 'CELL.PATHPREPARETOCOPYCELL called');
+	};
 	/**
 Cell.setCopy update copyData object values
 @method setCopy
@@ -5850,6 +6346,7 @@ Cell.setCopy update copyData object values
 @private
 **/
 	my.Cell.prototype.setCopy = function() {
+		// console.log(this.name, 'CELL.SETCOPY called');
 		var bet = my.isBetween,
 			data = this.copyData,
 			copy = this.copy,
@@ -5894,6 +6391,7 @@ Cell.setPaste helper function
 @private
 **/
 	my.Cell.prototype.setReference = function() {
+		// console.log(this.name, 'CELL.SETREFERENCE called');
 		var so = my.safeObject,
 			cell = my.cell,
 			pad = so(my.pad[this.pad]),
@@ -5926,6 +6424,7 @@ Cell.setPaste update pasteData object values
 @private
 **/
 	my.Cell.prototype.setPaste = function() {
+		// console.log(this.name, 'CELL.SETPASTE called');
 		var so = my.safeObject,
 			cell = my.cell,
 			pad = so(my.pad[this.pad]),
@@ -5988,6 +6487,7 @@ Cell copy helper function
 @private
 **/
 	my.Cell.prototype.copyCellToSelf = function(cell) {
+		// console.log(this.name, 'CELL.COPYCELLTOSELF called');
 		var destinationContext,
 			destinationEngine,
 			sourceEngine,
@@ -6027,6 +6527,7 @@ Entity stamp helper function
 @private
 **/
 	my.Cell.prototype.clearShadow = function(engine) {
+		// console.log(this.name, 'CELL.CLEARSHADOW called');
 		var context = my.ctx[this.context];
 		engine.shadowOffsetX = 0.0;
 		engine.shadowOffsetY = 0.0;
@@ -6044,6 +6545,7 @@ Entity stamp helper function
 @private
 **/
 	my.Cell.prototype.restoreShadow = function(engine, entitycontext) {
+		// console.log(this.name, 'CELL.RESTORESHADOW called');
 		var ctx = my.ctx,
 			cellContext = ctx[this.context],
 			entityContext = ctx[entitycontext];
@@ -6063,16 +6565,18 @@ Entity stamp helper function
 @private
 **/
 	my.Cell.prototype.setToClearShape = function() {
+		// console.log(this.name, 'CELL.SETTOCLEARSHAPE called');
 		var context,
-			engine;
+			engine,
+			col = 'rgba(0, 0, 0, 0)';
 		engine = my.context[this.name];
 		context = my.ctx[this.context];
-		engine.fillStyle = 'rgba(0, 0, 0, 0)';
-		engine.strokeStyle = 'rgba(0, 0, 0, 0)';
-		engine.shadowColor = 'rgba(0, 0, 0, 0)';
-		context.fillStyle = 'rgba(0, 0, 0, 0)';
-		context.strokeStyle = 'rgba(0, 0, 0, 0)';
-		context.shadowColor = 'rgba(0, 0, 0, 0)';
+		engine.fillStyle = col;
+		engine.strokeStyle = col;
+		engine.shadowColor = col;
+		context.fillStyle = col;
+		context.strokeStyle = col;
+		context.shadowColor = col;
 		return this;
 	};
 	/**
@@ -6085,6 +6589,7 @@ Omitting the argument will force the &lt;canvas&gt; to set itself to its Pad obj
 @chainable
 **/
 	my.Cell.prototype.setDimensions = function() {
+		// console.log(this.name, 'CELL.SETDIMENSIONS called');
 		var canvas = my.canvas[this.name],
 			width = this.actualWidth,
 			height = this.actualHeight;
@@ -6101,6 +6606,7 @@ Perform a JavaScript ctx.save() operation
 @chainable
 **/
 	my.Cell.prototype.saveContext = function() {
+		// console.log(this.name, 'CELL.SAVECONTEXT called');
 		my.context[this.name].save();
 		return this;
 	};
@@ -6111,6 +6617,7 @@ Perform a JavaScript ctx.restore() operation
 @chainable
 **/
 	my.Cell.prototype.restoreContext = function() {
+		// console.log(this.name, 'CELL.RESTORECONTEXT called');
 		my.context[this.name].restore();
 		return this;
 	};
@@ -6130,6 +6637,7 @@ Default values are:
 @return String label pointing to where the image has been saved in the scrawl library - scrawl.imageData[STRING]
 **/
 	my.Cell.prototype.getImageData = function(dimensions) {
+		// console.log(this.name, 'CELL.GETIMAGEDATA called');
 		var x,
 			y,
 			get = my.xtGet,
@@ -6165,6 +6673,7 @@ Default values are:
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 	my.Context = function(items) {
+		// console.log('CONTEXT CONSTRUCTOR called', items);
 		items = this.init(items);
 		if (items.cell) {
 			this.getContextFromEngine(items.cell);
@@ -6366,12 +6875,14 @@ Text baseline value for single-line Phrase entitys set to follow a Path entity p
 	my.mergeInto(my.Context.prototype.setters, my.Base.prototype.setters);
 	my.Context.prototype.deltaSetters = {
 		lineDashOffset: function(item){
+		// console.log(this.name, 'CONTEXT.DELTASETTERS.LINEDASHOFFSET called');
 			if (typeof this.lineDashOffset == 'undefined') {
 				this.lineDashOffset = 0;
 			}
 			this.lineDashOffset += item;
 		},
 		lineWidth: function(item){
+		// console.log(this.name, 'CONTEXT.DELTASETTERS.LINEWIDTH called');
 			if (typeof this.lineWidth == 'undefined') {
 				this.lineWidth = 1;
 			}
@@ -6381,6 +6892,7 @@ Text baseline value for single-line Phrase entitys set to follow a Path entity p
 			}
 		},
 		globalAlpha: function(item){
+		// console.log(this.name, 'CONTEXT.DELTASETTERS.GLOBALALPHA called');
 			if (typeof this.globalAlpha == 'undefined') {
 				this.globalAlpha = 1;
 			}
@@ -6402,6 +6914,7 @@ Interrogates a &lt;canvas&gt; element's context engine and populates its own att
 @private
 **/
 	my.Context.prototype.getContextFromEngine = function(ctx) {
+		// console.log(this.name, 'CONTEXT.GETCONTEXTFROMENGINE called');
 		var keys = this.contextKeys,
 			key,
 			get = my.xtGet;
@@ -6423,15 +6936,21 @@ Compares an entity's context engine values (held in this context object) to thos
 @return a results object containing changes to be made to the canvas context engine
 @private
 **/
+	my.work.contextMainKeys = ['globalAlpha', 'globalCompositeOperation', 'shadowOffsetX', 'shadowOffsetY', 'shadowBlur'];
+	my.work.contextLineKeys = ['lineWidth', 'lineCap', 'lineJoin', 'lineDash', 'lineDashOffset', 'miterLimit'];
+	my.work.contextStyleKeys = ['fillStyle', 'strokeStyle', 'shadowColor'];
+	my.work.contextTextKeys = ['font', 'textAlign', 'textBaseline'];
 	my.Context.prototype.getChanges = function(entity, ctx) {
-		var mainKeys = ['globalAlpha', 'globalCompositeOperation', 'shadowOffsetX', 'shadowOffsetY', 'shadowBlur'],
-			lineKeys = ['lineWidth', 'lineCap', 'lineJoin', 'lineDash', 'lineDashOffset', 'miterLimit'],
-			styleKeys = ['fillStyle', 'strokeStyle', 'shadowColor'],
-			textKeys = ['font', 'textAlign', 'textBaseline'],
+		// console.log(this.name, 'CONTEXT.GETCHANGES called', (entity) ? entity.name : noEntity);
+		var w = my.work,
+			mainKeys = w.contextMainKeys,
+			lineKeys = w.contextLineKeys,
+			styleKeys = w.contextStyleKeys,
+			textKeys = w.contextTextKeys,
 			k, d, color, scaled, i, iz, j, jz,
 			ldFlag, currentE, currentC, 
 			dx = my.Context.prototype.defs,
-			result = {};
+			result = my.requestObject();
 
 		for(i = 0, iz = mainKeys.length; i < iz; i++){
 			k = mainKeys[i];
@@ -6534,7 +7053,12 @@ Compares an entity's context engine values (held in this context object) to thos
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 	my.Group = function(items) {
-		items = this.init(items);
+		// console.log('GROUP CONSTRUCTOR called', items);
+		this.init(items);
+		this.entitys = [];
+		if(!this.cell){
+			my.Group.prototype.setters.cell.call(this, items.cell);
+		}
 		this.resort = true;
 		return this;
 	};
@@ -6601,23 +7125,59 @@ Collision checking radius, in pixels - as a first step in a collision check, the
 		regionRadius: 0
 	};
 	my.mergeInto(my.Group.prototype.defs, my.Base.prototype.defs);
-	my.Group.prototype.keyAttributeList = my.mergeArraysUnique(my.Base.prototype.keyAttributeList, ['entitys', 'cell', 'order', 'resort', 'visibility', 'entitySort', 'regionRadius']);
-	my.Group.prototype.multifiltersGroupInit = function() {};
+	my.Group.prototype.keyAttributeList = my.mergeArraysUnique(my.Base.prototype.keyAttributeList, ['cell', 'order', 'resort', 'visibility', 'entitySort', 'regionRadius']);
+	my.Group.prototype.multifiltersGroupInit = function() {
+		// console.log(this.name, 'GROUP.MULTIFILTERSGROUPINIT called');
+	};
 	my.Group.prototype.getters = {};
 	my.mergeInto(my.Group.prototype.getters, my.Base.prototype.getters);
 	my.Group.prototype.setters = {
 		entitys: function(item){
-			this.entitys = (my.xt(item)) ? [].concat(items.entitys) : [];
+			// console.log(this.name, 'GROUP.SETTERS.ENTITYS called');
+			if(!this.entitys){
+				this.entitys = [];
+			}
+			if(my.xt(item)){
+				this.entitys.length = 0;
+				this.entitys = this.entitys.concat(item);
+			}
 		},
 		cell: function(item){
-			this.cell = item || my.pad[my.work.currentPad].current;
+			// console.log(this.name, 'GROUP.SETTERS.CELL called', this.cell, item);
+			var oldcell, newcell,
+				c = my.cell;
+			item = (item && item.substring) ? item : my.pad[my.work.currentPad].current;
+			if(this.cell && this.cell !== item){
+				oldcell = c[this.cell];
+				newcell = c[item];
+				if(oldcell && newcell){
+					my.removeItem(oldcell.groups, this.name);
+					my.pushUnique(newcell.groups, this.name);
+					oldcell.sortGroupsFlag = true;
+					newcell.sortGroupsFlag = true;
+					this.cell = item;
+				}
+			}
+			else if(!this.cell){
+				newcell = c[item];
+				if(newcell){
+					my.pushUnique(newcell.groups, this.name);
+					newcell.sortGroupsFlag = true;
+					this.cell = item;
+				}
+			}
 		},
 		order: function(item){
-			this.order = item;
-			my.cell[this.cell].sortGroupsFlag = true;
+			// console.log(this.name, 'GROUP.SETTERS.ORDER called');
+			var c = my.cell[this.cell];
+			if(c){
+				this.order = item;
+				c.sortGroupsFlag = true;
+			}
 		}
 	};
 	my.mergeInto(my.Group.prototype.setters, my.Base.prototype.setters);
+	// console.log(my.Group.prototype.setters);
 	/**
 Entity sorting routine - entitys are sorted according to their entity.order attribute value, in ascending order
 
@@ -6628,6 +7188,7 @@ Order values are treated as integers. The sort routine is a form of bucket sort,
 @private
 **/
 	my.Group.prototype.sortEntitys = function(force) {
+		// console.log(this.name, 'GROUP.SORTENTITYS called');
 		if (force || (this.entitySort && this.resort)) {
 			this.resort = false;
 			this.entitys = my.bucketSort('entity', 'order', this.entitys);
@@ -6644,6 +7205,7 @@ Tell the Group to ask _all_ of its constituent entitys to draw themselves on a &
 @chainable
 **/
 	my.Group.prototype.forceStamp = function(method, cellname, cell, mouse) {
+		// console.log(this.name, 'GROUP.FORCESTAMP called');
 		var visibility = this.visibility;
 		this.visibility = true;
 		this.stamp(method, cellname, cell, mouse);
@@ -6661,13 +7223,15 @@ Tell the Group to ask its constituent entitys to draw themselves on a &lt;canvas
 @chainable
 **/
 	my.Group.prototype.stamp = function(method, cellname, cell, mouse) {
+		// console.log(this.name, 'GROUP.STAMP called');
 		var entity,
 			entitys,
 			e = my.entity,
 			tempFilter, tempCellname, tempCell, work,
 			multifilterFlag = false,
 			i,
-			iz;
+			iz,
+			s;
 		if (this.visibility) {
 			this.sortEntitys();
 			entitys = this.entitys;
@@ -6681,10 +7245,9 @@ Tell the Group to ask its constituent entitys to draw themselves on a &lt;canvas
 					tempCellname = cellname;
 					cell = work.cvwrapper;
 					cellname = work.cvwrapper.name;
-					cell.set({
-						width: tempCell.actualWidth,
-						height: tempCell.actualHeight
-					});
+					s = my.requestObject('width', tempCell.actualWidth, 'height', tempCell.actualHeight)
+					cell.set(s);
+					my.releaseObject(s);
 					my.work.cvcontroller.mice = my.pad[my.cell[tempCellname].pad].mice;
 				}
 			}
@@ -6703,15 +7266,18 @@ Tell the Group to ask its constituent entitys to draw themselves on a &lt;canvas
 		}
 		return this;
 	};
-	my.Group.prototype.stampMultifilter = function() {};
+	my.Group.prototype.stampMultifilter = function() {
+		// console.log(this.name, 'GROUP.STAMPMULTIFILITER called');
+	};
 	/**
 Add entitys to the Group
 @method addEntitysToGroup
-@param {Array} item Array of SPRITENAME Strings; alternatively, a single SPRITENAME String can be supplied as the argument
+@param {Array} item Array of ENTITYNAME Strings; alternatively, a single ENTITYNAME String can be supplied as the argument
 @return This
 @chainable
 **/
 	my.Group.prototype.addEntitysToGroup = function() {
+		// console.log(this.name, 'GROUP.ADDENTITYSTOGROUP called');
 		var slice = [],
 			pu = my.pushUnique,
 			entitys = this.entitys,
@@ -6756,6 +7322,7 @@ Remove entitys from the Group
 @chainable
 **/
 	my.Group.prototype.removeEntitysFromGroup = function() {
+		// console.log(this.name, 'GROUP.REMOVEENTITYSFROMGROUP called', arguments);
 		var slice = [],
 			ri = my.removeItem,
 			entitys = this.entitys,
@@ -6803,6 +7370,7 @@ start delta coordinates can be supplied in the form of __x__ and __y__ attribute
 @chainable
 **/
 	my.Group.prototype.updateEntitysBy = function(items) {
+		// console.log(this.name, 'GROUP.UPDATEENTITYSBY called', items);
 		var entitys = this.entitys,
 			entity = my.entity,
 			xt = my.xt,
@@ -6828,6 +7396,7 @@ Ask all entitys in the Group to perform a set() operation
 @chainable
 **/
 	my.Group.prototype.setEntitysTo = function(items) {
+		// console.log(this.name, 'GROUP.SETENTITYSTO called', items);
 		var entitys = this.entitys,
 			e = my.entity,
 			i,
@@ -6847,34 +7416,34 @@ This has the effect of turning a set of disparate entitys into a single, coordin
 @chainable
 **/
 	my.Group.prototype.pivotEntitysTo = function(item) {
+		// console.log(this.name, 'GROUP.PIVOTENTITYSTO called', item);
 		var pivot,
 			pivotVector,
 			entity,
 			entitys = this.entitys,
 			e = my.entity,
 			entityVector,
-			v = my.work.v,
+			v,
 			i,
 			iz,
-			arg = {
-				pivot: 0,
-				handleX: 0,
-				handleY: 0
-			};
+			arg;
 		item = (item.substring) ? item : false;
 		if (item) {
 			pivot = e[item] || my.point[item] || false;
 			if (pivot) {
+				arg = my.requestObject();
+				v = my.requestVector();
 				pivotVector = (pivot.type === 'Point') ? pivot.local : pivot.start;
 				for (i = 0, iz = entitys.length; i < iz; i++) {
 					entity = e[entitys[i]];
-					entityVector = v.set(entity.start);
-					entityVector.vectorSubtract(pivotVector);
+					v.set(entity.start).vectorSubtract(pivotVector);
 					arg.pivot = item;
-					arg.handleX = -entityVector.x;
-					arg.handleY = -entityVector.y;
+					arg.handleX = -v.x;
+					arg.handleY = -v.y;
 					entity.set(arg);
 				}
+				my.releaseVector(v);
+				my.releaseObject(arg);
 			}
 		}
 		return this;
@@ -6887,16 +7456,19 @@ Check all entitys in the Group to see if they are colliding with the supplied co
 **/
 	my.Group.prototype.getEntityAt = function(items) {
 		var entity,
-			v1 = my.work.colv1,
-			v2 = my.work.colv2,
+			result = false,
+			req = my.requestVector,
+			rel = my.releaseVector,
+			v1 = req(),
+			v2 = req(),
 			entitys = this.entitys,
 			e = my.entity,
 			rad = this.regionRadius,
 			coordinate,
 			i;
 		items = my.safeObject(items);
-		coordinate = v1.set(items); //coordinate = my.work.colv1
-		coordinate = my.Position.prototype.correctCoordinates(coordinate, this.cell); //coordinate = my.work.v
+		v1.set(items);
+		coordinate = my.Position.prototype.correctCoordinates.call(this, v1, this.cell);
 		this.sortEntitys();
 		for (i = entitys.length - 1; i >= 0; i--) {
 			entity = e[entitys[i]];
@@ -6907,10 +7479,14 @@ Check all entitys in the Group to see if they are colliding with the supplied co
 				}
 			}
 			if (entity.checkHit(coordinate)) {
-				return entity;
+				result = entity;
+				break;
 			}
 		}
-		return false;
+		rel(v1);
+		rel(v2);
+		rel(coordinate);
+		return result;
 	};
 	/**
 Check all entitys in the Group to see which one(s) are associated with a particular mouse index
@@ -6919,6 +7495,7 @@ Check all entitys in the Group to see which one(s) are associated with a particu
 @return Array of Entity objects
 **/
 	my.Group.prototype.getEntitysByMouseIndex = function(item) {
+		// console.log(this.name, 'GROUP.GETENTITYSBYMOUSEINDEX called', items);
 		var result = [],
 			entitys = this.entitys,
 			e = my.entity,
@@ -6942,8 +7519,10 @@ Check all entitys in the Group to see if they are colliding with the supplied co
 **/
 	my.Group.prototype.getAllEntitysAt = function(items) {
 		var entity,
-			v1 = my.work.colv1,
-			v2 = my.work.colv2,
+			req = my.requestVector,
+			rel = my.releaseVector,
+			v1 = req(),
+			v2 = req(),
 			coordinate,
 			results,
 			entitys = this.entitys,
@@ -6951,9 +7530,9 @@ Check all entitys in the Group to see if they are colliding with the supplied co
 			rad = this.regionRadius,
 			i;
 		items = my.safeObject(items);
-		coordinate = v1.set(items); //coordinate = my.work.colv1
+		v1.set(items);
 		results = [];
-		coordinate = my.Position.prototype.correctCoordinates(coordinate, this.cell); //coordinate = my.work.v
+		coordinate = my.Position.prototype.correctCoordinates(v1, this.cell);
 		this.sortEntitys();
 		for (i = entitys.length - 1; i >= 0; i--) {
 			entity = e[entitys[i]];
@@ -6967,6 +7546,9 @@ Check all entitys in the Group to see if they are colliding with the supplied co
 				results.push(entity);
 			}
 		}
+		rel(v1);
+		rel(v2);
+		rel(coordinate);
 		return (results.length > 0) ? results : false;
 	};
 	/**
@@ -6977,6 +7559,7 @@ Augments Group.set()
 @private
 **/
 	my.Group.prototype.setDirtyStarts = function() {
+		// console.log(this.name, 'GROUP.SETDIRTYSTARTS called');
 		var entity = my.entity,
 			entitys = this.entitys,
 			e,
@@ -6996,6 +7579,7 @@ Augments Group.set()
 @private
 **/
 	my.Group.prototype.setDirtyHandles = function() {
+		// console.log(this.name, 'GROUP.SETDIRTYHANDLES called');
 		var entity = my.entity,
 			entitys = this.entitys,
 			e,
@@ -7039,6 +7623,7 @@ __Scrawl core does not include any entity type constructors.__ Each entity type 
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 	my.Entity = function(items) {
+		// console.log('ENTITY CONSTRUCTOR called', items);
 		return this;
 	};
 	my.Entity.prototype = Object.create(my.Position.prototype);
@@ -7052,18 +7637,15 @@ __Scrawl core does not include any entity type constructors.__ Each entity type 
 	my.Entity.prototype.lib = 'entity';
 	my.Entity.prototype.libName = 'entitynames';
 	my.Entity.prototype.addContext = function(items){
+		// console.log(this.type, this.name, 'ENTITY.ADDCONTEXT called');
 		items.name = this.name;
-		var context = my.makeContext({
-			name: this.name,
-			cell: my.context[this.name]
-		});
+		var context,
+			s = my.requestObject('name', this.name, 'cell', my.context[this.name])
+		context = my.makeContext(s);
+		my.releaseObject(s);
 		this.context = context.name;
 		delete items.name;
 	};
-	my.Entity.prototype.preRegister = function(items){
-		this.group = this.getGroup(items);
-		my.group[this.group].addEntitysToGroup(this.name);
-	}
 	my.Entity.prototype.defs = {
 		/**
 Entity order value - lower order entitys are drawn on &lt;canvas&gt; elements before higher order entitys
@@ -7138,13 +7720,17 @@ Entity constructor hook function - modified by multifilters extension
 @method multifiltersEntityInit
 @private
 **/
-	my.Entity.prototype.multifiltersEntityInit = function(items) {};
+	my.Entity.prototype.multifiltersEntityInit = function(items) {
+		// console.log(this.type, this.name, 'ENTITY.MULTIFILTERSENTITYINIT called', items);
+	};
 	/**
 Entity constructor hook function - modified by collisions extension
 @method collisionsEntityConstructor
 @private
 **/
-	my.Entity.prototype.collisionsEntityConstructor = function(items) {};
+	my.Entity.prototype.collisionsEntityConstructor = function(items) {
+		// console.log(this.type, this.name, 'ENTITY.COLLISIONENTITYCONSTRUCTOR called', items);
+	};
 	/**
 Augments Position.get()
 
@@ -7154,6 +7740,7 @@ Allows users to retrieve a entity's Context object's values via the entity
 @return Attribute value
 **/
 	my.Entity.prototype.get = function(item) {
+		// console.log(this.type, this.name, 'ENTITY.GET called', item);
 		var undef,
 			g = this.getters[item],
 			d, i;
@@ -7171,23 +7758,28 @@ Allows users to retrieve a entity's Context object's values via the entity
 			}
 		}
 	};
-	my.Entity.prototype.getters = {};
+	my.Entity.prototype.getters = {
+		group: function(){
+			// console.log(this.type, this.name, 'ENTITY.GETTERS.GROUP called');
+			if(!this.group){
+				my.Entity.prototype.setters.group.call(this, this.group);
+			}
+			return this.group;
+		}
+	};
 	my.mergeInto(my.Entity.prototype.getters, my.Position.prototype.getters);
 	/**
 Augments Position.set()
-
-Allows users to:
-* set a entity's Context object's values via the entity
-* shift a entity between groups
 @method set
 @param {Object} items Object consisting of key:value attributes
 @return This
 @chainable
 **/
 	my.Entity.prototype.set = function(items) {
+		// console.log(this.type, this.name, 'ENTITY.SET called', items);
 		var key, i, iz, s, 
 			ctxList = my.Context.prototype.contextKeys,
-			ctxItems = {},
+			ctxItems = my.requestObject(),
 			setters = this.setters,
 			keys = Object.keys(items),
 			d = this.defs;
@@ -7207,10 +7799,12 @@ Allows users to:
 		if(Object.keys(ctxItems).length){
 			my.ctx[this.context].set(ctxItems);
 		}
+		my.releaseObject(ctxItems);
 		return this;
 	};
 	my.Entity.prototype.setters = {
 		group: function(item){
+			// console.log(this.type, this.name, 'ENTITY.SETTERS.GROUP called');
 			var group = my.group;
 			if (this.group && item !== this.group) {
 				group[this.group].removeEntitysFromGroup(this.name);
@@ -7223,15 +7817,20 @@ Allows users to:
 			}
 		},
 		order: function(item){
+			// console.log(this.type, this.name, 'ENTITY.SETTERS.ORDER called', item, this.order, this.group);
+			if(!this.group){
+				this.group = this.getGroup();
+			}
 			this.order = item;
 			my.group[this.group].resort = true;
 		},
 	};
 	my.mergeInto(my.Entity.prototype.setters, my.Position.prototype.setters);
 	my.Entity.prototype.setDelta = function(items) {
+		// console.log(this.type, this.name, 'ENTITY.SETDELTA called');
 		var key, i, iz, s, item, current,
 			ctxList = my.Context.prototype.contextKeys,
-			ctxItems = {},
+			ctxItems = my.requestObject(),
 			setters = this.deltaSetters,
 			keys = Object.keys(items),
 			d = this.defs;
@@ -7261,6 +7860,7 @@ Allows users to:
 		if(Object.keys(ctxItems).length){
 			my.ctx[this.context].set(ctxItems);
 		}
+		my.releaseObject(ctxItems);
 		return this;
 	};
 	my.Entity.prototype.deltaSetters = {};
@@ -7272,14 +7872,16 @@ Constructor helper function - discover this entity's default group affiliation
 @return GROUPNAME String
 @private
 **/
-	my.Entity.prototype.getGroup = function(items) {
-		items = my.safeObject(items);
-		if (my.xt(items.group) && my.group[items.group]) {
-			return items.group;
+	my.Entity.prototype.getGroup = function(item) {
+		// console.log(this.type, this.name, 'ENTITY.GETGROUP called', item);
+		var g;
+		if (my.group[item]) {
+			g = item;
 		}
 		else {
-			return my.pad[my.work.currentPad].current;
+			g = my.pad[my.work.currentPad].current;
 		}
+		return g;
 	};
 	/**
 Helper function - get a entity's cell onbject
@@ -7288,6 +7890,7 @@ Helper function - get a entity's cell onbject
 @private
 **/
 	my.Entity.prototype.getEntityCell = function(items) {
+		// console.log(this.type, this.name, 'ENTITY.GETENTITYCELL called', items);
 		return my.cell[my.group[this.getGroup(items)].cell];
 	};
 	/**
@@ -7314,6 +7917,7 @@ Permitted methods include:
 @chainable
 **/
 	my.Entity.prototype.forceStamp = function(method, cellname, cell, mouse) {
+		// console.log(this.type, this.name, 'ENTITY.FORCESTAMP called');
 		var visibility = this.visibility;
 		this.visibility = true;
 		this.stamp(method, cellname, cell, mouse);
@@ -7345,10 +7949,12 @@ Permitted methods include:
 
 **/
 	my.Entity.prototype.stamp = function(method, cellname, cell, mouse) {
+		// console.log(this.type, this.name, 'ENTITY.STAMP called');
 		var engine, ctx,
 			tempCellname, tempCell, tempEngine, tempGCO,
 			sFlag, hFlag, multifilterFlag,
-			tempFilter, work;
+			tempFilter, work,
+			tempObject;
 
 		if (this.visibility) {
 			sFlag = !this.currentStart.flag;
@@ -7375,10 +7981,9 @@ Permitted methods include:
 					engine = work.cvx2;
 					cell = work.cvwrapper2;
 					cellname = work.cvwrapper2.name;
-					cell.set({
-						width: tempCell.actualWidth,
-						height: tempCell.actualHeight
-					});
+					tempObject = my.requestObject('width', tempCell.actualWidth, 'height', tempCell.actualHeight);
+					cell.set(tempObject);
+					my.releaseObject(tempObject);
 					my.work.cvcontroller.mice = my.pad[my.cell[tempCellname].pad].mice;
 				}
 			}
@@ -7389,12 +7994,14 @@ Permitted methods include:
 				if (hFlag) {
 					this.updateCurrentHandle();
 				}
-				this.resetCollisionPoints();
+				if(this.collisionArray){
+					this.resetCollisionPoints();
+				}
 			}
 			if (this.pivot) {
 				this.setStampUsingPivot(cellname, mouse);
 			}
-			else {
+			else if(this.path){
 				this.pathStamp();
 			}
 			this[method](engine, cellname, cell);
@@ -7414,19 +8021,25 @@ stamp helper function - amended by collisions extension
 @return this
 @chainable
 **/
-	my.Entity.prototype.resetCollisionPoints = function() {};
+	my.Entity.prototype.resetCollisionPoints = function() {
+		// console.log(this.type, this.name, 'ENTITY.RESETCOLLISIONPOINTS called');
+	};
 	/**
 Entity.stamp hook function - modified by path extension
 @method pathStamp
 @private
 **/
-	my.Entity.prototype.pathStamp = function() {};
+	my.Entity.prototype.pathStamp = function() {
+		// console.log(this.type, this.name, 'ENTITY.PATHSTAMP called');
+	};
 	/**
 Entity.stamp hook function - modified by multifilters extension
 @method stampMultifilter
 @private
 **/
-	my.Entity.prototype.stampMultifilter = function() {};
+	my.Entity.prototype.stampMultifilter = function() {
+		// console.log(this.type, this.name, 'ENTITY.STAMPMULTIFILTER called');
+	};
 	/**
 Stamp helper function - rotate and position canvas ready for drawing entity
 @method rotateCell
@@ -7437,6 +8050,7 @@ Stamp helper function - rotate and position canvas ready for drawing entity
 @private
 **/
 	my.Entity.prototype.rotateCell = function(ctx, cell) {
+		// console.log(this.type, this.name, 'ENTITY.ROTATECELL called');
 		var reverse = (this.flipReverse) ? -1 : 1,
 			upend = (this.flipUpend) ? -1 : 1,
 			rotation = (this.addPathRoll) ? this.roll + this.pathRoll : this.roll,
@@ -7459,6 +8073,7 @@ Entity.getStartValues
 @private
 **/
 	my.Entity.prototype.getStartValues = function() {
+		console.log(this.type, this.name, 'ENTITY.GETSTARTVALUES called');
 		var start = this.currentStart;
 		return {
 			x: start.x,
@@ -7471,6 +8086,7 @@ Entity.getHandleValues
 @private
 **/
 	my.Entity.prototype.getHandleValues = function() {
+		console.log(this.type, this.name, 'ENTITY.GETHANDLEVALUES called');
 		var handle = this.currentHandle;
 		return {
 			x: handle.x,
@@ -7482,11 +8098,14 @@ Entity.getStart
 @method getStart
 **/
 	my.Entity.prototype.getStart = function() {
-		var start = my.work.v.set(this.currentStart).vectorAdd(this.currentHandle);
-		return {
-			x: start.x,
-			y: start.y
-		};
+		console.log(this.type, this.name, 'ENTITY.GETSTART called');
+		var start = my.requestVector(),
+			result = {};
+		start.set(this.currentStart).vectorAdd(this.currentHandle);
+		result.x = start.x;
+		result.y = start.y;
+		my.releaseVector(start);
+		return result;
 	};
 	/**
 Stamp helper function - perform a 'clear' method draw
@@ -7501,6 +8120,7 @@ _Note: not supported by this entity_
 @private
 **/
 	my.Entity.prototype.clear = function(ctx, cellname, cell) {
+		// console.log(this.type, this.name, 'ENTITY.CLEAR called');
 		return this;
 	};
 	/**
@@ -7516,6 +8136,7 @@ _Note: not supported by this entity_
 @private
 **/
 	my.Entity.prototype.clearWithBackground = function(ctx, cellname, cell) {
+		// console.log(this.type, this.name, 'ENTITY.COMPILE called');
 		return this;
 	};
 	/**
@@ -7531,6 +8152,7 @@ _Note: not supported by this entity_
 @private
 **/
 	my.Entity.prototype.draw = function(ctx, cellname, cell) {
+		// console.log(this.type, this.name, 'ENTITY.DRAW called');
 		return this;
 	};
 	/**
@@ -7546,6 +8168,7 @@ _Note: not supported by this entity_
 @private
 **/
 	my.Entity.prototype.fill = function(ctx, cellname, cell) {
+		// console.log(this.type, this.name, 'ENTITY.FILL called');
 		return this;
 	};
 	/**
@@ -7561,6 +8184,7 @@ _Note: not supported by this entity_
 @private
 **/
 	my.Entity.prototype.drawFill = function(ctx, cellname, cell) {
+		// console.log(this.type, this.name, 'ENTITY.DRAWFILL called');
 		return this;
 	};
 	/**
@@ -7576,6 +8200,7 @@ _Note: not supported by this entity_
 @private
 **/
 	my.Entity.prototype.fillDraw = function(ctx, cellname, cell) {
+		// console.log(this.type, this.name, 'ENTITY.FILLDRAW called');
 		return this;
 	};
 	/**
@@ -7591,6 +8216,7 @@ _Note: not supported by this entity_
 @private
 **/
 	my.Entity.prototype.sinkInto = function(ctx, cellname, cell) {
+		// console.log(this.type, this.name, 'ENTITY.SINKINTO called');
 		return this;
 	};
 	/**
@@ -7606,6 +8232,7 @@ _Note: not supported by this entity_
 @private
 **/
 	my.Entity.prototype.floatOver = function(ctx, cellname, cell) {
+		// console.log(this.type, this.name, 'ENTITY.FLOATOVER called');
 		return this;
 	};
 	/**
@@ -7621,6 +8248,7 @@ _Note: not supported by this entity_
 @private
 **/
 	my.Entity.prototype.clip = function(ctx, cellname, cell) {
+		// console.log(this.type, this.name, 'ENTITY.CLIP called');
 		return this;
 	};
 	/**
@@ -7634,6 +8262,7 @@ Stamp helper function - perform a 'none' method draw. This involves setting the 
 @private
 **/
 	my.Entity.prototype.none = function(ctx, cellname, cell) {
+		// console.log(this.type, this.name, 'ENTITY.NONE called');
 		cell.setEngine(this);
 		return this;
 	};
@@ -7647,6 +8276,7 @@ Stamp helper function - clear shadow parameters during a multi draw operation (d
 @private
 **/
 	my.Entity.prototype.clearShadow = function(ctx, cell) {
+		// console.log(this.type, this.name, 'ENTITY.CLEARSHADOW called');
 		var context = my.ctx[this.context];
 		if (context.shadowOffsetX || context.shadowOffsetY || context.shadowBlur) {
 			cell.clearShadow(ctx);
@@ -7663,6 +8293,7 @@ Stamp helper function - clear shadow parameters during a multi draw operation (P
 @private
 **/
 	my.Entity.prototype.restoreShadow = function(ctx, cell) {
+		// console.log(this.type, this.name, 'ENTITY.RESTORESHADOW called');
 		var context = my.ctx[this.context];
 		if (context.shadowOffsetX || context.shadowOffsetY || context.shadowBlur) {
 			cell.restoreShadow(ctx, this.context);
@@ -7677,12 +8308,13 @@ Set entity's pivot to 'mouse'; set handles to supplied Vector value; set order t
 @chainable
 **/
 	my.Entity.prototype.pickupEntity = function(items) {
-		var cell,
+		// console.log(this.type, this.name, 'ENTITY.PICKUPENTITY called', items);
+		var cell, v,
 			coordinate;
 		items = my.safeObject(items);
-		coordinate = my.work.v.set(items);
+		v = my.requestVector(items.x, items.y);
 		cell = my.cell[my.group[this.group].cell];
-		coordinate = this.correctCoordinates(coordinate, cell);
+		coordinate = this.correctCoordinates(v, cell);
 		this.oldX = coordinate.x || 0;
 		this.oldY = coordinate.y || 0;
 		this.oldPivot = this.pivot;
@@ -7691,6 +8323,8 @@ Set entity's pivot to 'mouse'; set handles to supplied Vector value; set order t
 		this.currentPivotIndex = false;
 		this.order += 9999;
 		my.group[this.group].resort = true;
+		my.releaseVector(v);
+		my.releaseVector(coordinate);
 		return this;
 	};
 	/**
@@ -7701,6 +8335,7 @@ Revert pickupEntity() actions, ensuring entity is left where the user drops it
 @chainable
 **/
 	my.Entity.prototype.dropEntity = function(item) {
+		// console.log(this.type, this.name, 'ENTITY.DROPENTITY called', items);
 		this.pivot = my.xtGet(item, this.oldPivot, null);
 		this.currentPivotIndex = false;
 		this.order = (this.order >= 9999) ? this.order - 9999 : 0;
@@ -7732,7 +8367,8 @@ Either the 'tests' attribute should contain a Vector, or an array of vectors, or
 @return The first coordinate to fall within the entity's path; false if none fall within the path
 **/
 	my.Entity.prototype.checkHit = function(items) {
-		var tests = [],
+		// console.log(this.type, this.name, 'ENTITY.CHECKHIT called', items);
+		var tests, testsFlag = false,
 			here,
 			handle = this.currentHandle,
 			result,
@@ -7749,9 +8385,8 @@ Either the 'tests' attribute should contain a Vector, or an array of vectors, or
 			tests = items.tests;
 		}
 		else {
-			tests.length = 0;
-			tests.push(items.x || 0);
-			tests.push(items.y || 0);
+			tests = my.requestArray(items.x || 0, items.y || 0);
+			testsFlag = true;
 		}
 		this.rotateCell(cvx, this.getEntityCell().name);
 		if (!handle.flag) {
@@ -7771,7 +8406,13 @@ Either the 'tests' attribute should contain a Vector, or an array of vectors, or
 		if (result) {
 			items.x = tests[i];
 			items.y = tests[i + 1];
+			if(testsFlag){
+				my.releaseArray(tests);
+			}
 			return items;
+		}
+		if(testsFlag){
+			my.releaseArray(tests);
 		}
 		return false;
 	};
@@ -7793,6 +8434,7 @@ Either the 'tests' attribute should contain a Vector, or an array of vectors, or
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 	my.Design = function(items) {
+		// console.log('DESIGN CONSTRUCTOR called', items);
 		return this;
 	};
 	my.Design.prototype = Object.create(my.Base.prototype);
@@ -7862,10 +8504,10 @@ Vertical start coordinate, in pixels, from the top-left corner of the gradient's
 		/**
 Horizontal end coordinate, in pixels, from the top-left corner of the gradient's &lt;canvas&gt; element
 @property endX
-@type Number
-@default 0
+@type String
+@default '100%'
 **/
-		endX: 0,
+		endX: '100%',
 		/**
 Vertical end coordinate, in pixels, from the top-left corner of the gradient's &lt;canvas&gt; element
 @property endY
@@ -7880,6 +8522,7 @@ Vertical end coordinate, in pixels, from the top-left corner of the gradient's &
 	my.mergeInto(my.Design.prototype.getters, my.Base.prototype.getters);
 	my.Design.prototype.setters = {
 		start: function(item){
+		// console.log(this.type, this.name, 'DESIGN.SETTERS.START called');
 			if(typeof item.x !== 'undefined'){
 				this.startX = item.x;
 			}
@@ -7888,6 +8531,7 @@ Vertical end coordinate, in pixels, from the top-left corner of the gradient's &
 			}
 		},
 		end: function(item){
+		// console.log(this.type, this.name, 'DESIGN.SETTERS.END called');
 			if(typeof item.x !== 'undefined'){
 				this.endX = item.x;
 			}
@@ -7896,12 +8540,18 @@ Vertical end coordinate, in pixels, from the top-left corner of the gradient's &
 			}
 		},
 		color: function(item){
-			this.color = [].concat(items.color);
+		// console.log(this.type, this.name, 'DESIGN.SETTERS.COLOR called');
+		if(!this.color){
+				this.color = [];
+			}
+			this.color.length = 0;
+			this.color = this.color.concat(item);
 		},
 	};
 	my.mergeInto(my.Design.prototype.setters, my.Base.prototype.setters);
 	my.Design.prototype.deltaSetters = {
 		start: function(item){
+		// console.log(this.type, this.name, 'DESIGN.DELTASETTERS.START called');
 			var current;
 			if(typeof item.x !== 'undefined'){
 				current = this.startX;
@@ -7923,6 +8573,7 @@ Vertical end coordinate, in pixels, from the top-left corner of the gradient's &
 			}
 		},
 		end: function(item){
+		// console.log(this.type, this.name, 'DESIGN.DELTASETTERS.END called');
 			var current;
 			if(typeof item.x !== 'undefined'){
 				current = this.endX;
@@ -7956,6 +8607,7 @@ _This function is replaced by the animation extension_
 @chainable
 **/
 	my.Design.prototype.update = function(entity, cell) {
+		// console.log(this.type, this.name, 'DESIGN.UPDATE called', (entity) ? entity : 'noEntity', (cell) ? cell : 'noCell');
 		this.makeGradient(entity, cell);
 		this.applyStops();
 		return this;
@@ -7967,6 +8619,7 @@ Returns &lt;canvas&gt; element's contenxt engine's gradient object, or 'rgba(0,0
 @private
 **/
 	my.Design.prototype.getData = function() {
+		// console.log(this.type, this.name, 'DESIGN.GETDATA called');
 		return (my.xt(my.dsn[this.name])) ? my.dsn[this.name] : 'rgba(0,0,0,0)';
 	};
 	/**
@@ -7979,6 +8632,7 @@ Design.update() helper function - builds &lt;canvas&gt; element's contenxt engin
 @private
 **/
 	my.Design.prototype.makeGradient = function(entity, cell) {
+		// console.log(this.type, this.name, 'DESIGN.MAKEGRADIENT called', (entity) ? entity.name : 'noEntity');
 		var ctx,
 			c = my.cell,
 			conv,
@@ -7991,6 +8645,7 @@ Design.update() helper function - builds &lt;canvas&gt; element's contenxt engin
 			sx,
 			sy,
 			sr,
+			s,
 			ex,
 			ey,
 			er,
@@ -8002,7 +8657,7 @@ Design.update() helper function - builds &lt;canvas&gt; element's contenxt engin
 			w,
 			h,
 			r,
-			v = my.work.v;
+			v;
 		entity = my.entity[entity] || false;
 		if (xt(cell)) {
 			cell = (c[cell]) ? c[cell] : c[this.get('cell')];
@@ -8055,7 +8710,6 @@ Design.update() helper function - builds &lt;canvas&gt; element's contenxt engin
 			if (ey.substring) {
 				ey = (parseFloat(ey) / 100) * h;
 			}
-			console.log(this.name, w, h, sx, sy, ex, ey);
 			if (this.type === 'Gradient') {
 				g = ctx.createLinearGradient(sx - x, sy - y, ex - x, ey - y);
 			}
@@ -8114,20 +8768,20 @@ Design.update() helper function - builds &lt;canvas&gt; element's contenxt engin
 				r = -entity.roll;
 			}
 			if (entity.roll) {
-				v.set({
-					x: fsx,
-					y: fsy,
-					z: 0
-				}).rotate(r);
+				v = my.requestVector();
+				s = my.requestObject();
+				s.x = fsx;
+				s.y = fsy;
+				v.set(s).rotate(r);
 				fsx = v.x;
 				fsy = v.y;
-				v.set({
-					x: fex,
-					y: fey,
-					z: 0
-				}).rotate(r);
+				s.x = fex;
+				s.y = fey;
+				v.set(s).rotate(r);
 				fex = v.x;
 				fey = v.y;
+				my.releaseVector(v);
+				my.releaseObject(s);
 			}
 			if (this.type === 'Gradient') {
 				g = ctx.createLinearGradient(fsx, fsy, fex, fey);
@@ -8155,6 +8809,7 @@ Design.update() helper function - applies color attribute objects to the gradien
 @chainable
 **/
 	my.Design.prototype.applyStops = function() {
+		// console.log(this.type, this.name, 'DESIGN.APPLYSTOPS called');
 		var color = this.get('color'),
 			i,
 			iz,
@@ -8172,6 +8827,7 @@ Remove this gradient from the scrawl library
 @return Always true
 **/
 	my.Design.prototype.remove = function() {
+		// console.log(this.type, this.name, 'DESIGN.REMOVE called');
 		delete my.dsn[this.name];
 		delete my.design[this.name];
 		my.removeItem(my.designnames, this.name);
@@ -8200,6 +8856,7 @@ Remove this gradient from the scrawl library
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 	my.Gradient = function(items) {
+		// console.log('GRADIENT CONSTRUCTOR called', items);
 		this.init(items);
 		return this;
 	};
@@ -8245,6 +8902,7 @@ Remove this gradient from the scrawl library
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 	my.RadialGradient = function(items) {
+		// console.log('RADIALGRADIENT CONSTRUCTOR called', items);
 		this.init(items);
 		return this;
 	};
@@ -8280,6 +8938,7 @@ End circle radius, in pixels or percentage of entity/cell width
 	my.mergeInto(my.RadialGradient.prototype.getters, my.Design.prototype.getters);
 	my.RadialGradient.prototype.setters = {
 		start: function(item){
+		// console.log(this.name, 'RADIALGRADIENT.SETTERS.START called');
 			if(typeof item.x !== 'undefined'){
 				this.startX = item.x;
 			}
@@ -8291,6 +8950,7 @@ End circle radius, in pixels or percentage of entity/cell width
 			}
 		},
 		end: function(item){
+		// console.log(this.name, 'RADIALGRADIENT.SETTERS.END called');
 			if(typeof item.x !== 'undefined'){
 				this.endX = item.x;
 			}
@@ -8305,6 +8965,7 @@ End circle radius, in pixels or percentage of entity/cell width
 	my.mergeInto(my.RadialGradient.prototype.setters, my.Design.prototype.setters);
 	my.RadialGradient.prototype.deltaSetters = {
 		start: function(item){
+		// console.log(this.name, 'RADIALGRADIENT.DELTASETTERS.START called');
 			var current;
 			if(typeof item.x !== 'undefined'){
 				current = this.startX;
@@ -8329,6 +8990,7 @@ End circle radius, in pixels or percentage of entity/cell width
 			}
 		},
 		end: function(item){
+		// console.log(this.name, 'RADIALGRADIENT.DELTASETTERS.END called');
 			var current;
 			if(typeof item.x !== 'undefined'){
 				current = this.endX;
@@ -8355,16 +9017,6 @@ End circle radius, in pixels or percentage of entity/cell width
 	};
 	my.mergeInto(my.RadialGradient.prototype.deltaSetters, my.Design.prototype.deltaSetters);
 
-	my.work.v = my.makeVector({
-		name: 'scrawl.v'
-	});
-	my.work.colv1 = my.makeVector({
-		name: 'scrawl.colv1'
-	});
-	my.work.colv2 = my.makeVector({
-		name: 'scrawl.colv2'
-	});
-
 	/**
 A __factory__ function to generate new Animation objects
 @method makeAnimation
@@ -8372,6 +9024,7 @@ A __factory__ function to generate new Animation objects
 @return Animation object
 **/
 	my.makeAnimation = function(items) {
+		// console.log('MAKEANIMATION called', items);
 		return new my.Animation(items);
 	};
 	my.work.animate = [];
@@ -8404,6 +9057,7 @@ To restart animation, either call __scrawl.initialize()__, or set _scrawl.doAnim
 @return Recursively calls itself - never returns
 **/
 	my.animationLoop = function() {
+		// console.log('ANIMATIONLOOP called');
 		var i,
 			iz,
 			animate = my.work.animate,
@@ -8429,6 +9083,7 @@ Animation sorting routine - animation objects are sorted according to their anim
 @private
 **/
 	my.sortAnimations = function() {
+		// console.log('SORTANIMATIONS called');
 		if (my.work.resortAnimations) {
 			my.work.resortAnimations = false;
 			my.work.animate = my.bucketSort('animation', 'order', my.work.animate);
@@ -8440,21 +9095,23 @@ Starts the animation loop
 @private
 **/
 	my.animationInit = function() {
-		my.makeAnimation({
-			name: 'viewportMasterAnimation',
-			fn: function() {
-				var dev = my.device,
-					testDims, testPos;
-				testDims = dev.getViewportDimensions();
-				testPos = dev.getViewportPosition();
-				if (testDims) {
-					my.setPerspectives();
-				}
-				if (testDims || testPos) {
-					my.setDisplayOffsets('all');
-				}
+		// console.log('ANIMATIONINIT called');
+		var s = my.requestObject();
+		s.name = 'viewportMasterAnimation';
+		s.fn = function() {
+			var dev = my.device,
+				testDims, testPos;
+			testDims = dev.getViewportDimensions();
+			testPos = dev.getViewportPosition();
+			if (testDims) {
+				my.setPerspectives();
 			}
-		});
+			if (testDims || testPos) {
+				my.setDisplayOffsets('all');
+			}
+		};
+		my.makeAnimation(s);
+		my.releaseObject(s);
 		my.work.doAnimation = true;
 		my.animationLoop();
 	};
@@ -8480,8 +9137,10 @@ Starts the animation loop
 @param {Object} [items] Key:value Object argument for setting attributes
 **/
 	my.Animation = function(items) {
+		// console.log('ANIMATION CONSTRUCTOR called', items);
 		var delay;
 		items = this.init(items);
+		this.fn = items.fn || function(){};
 		delay = (my.isa_bool(items.delay)) ? items.delay : false;
 		my.work.resortAnimations = true;
 		if (!delay) {
@@ -8506,7 +9165,6 @@ Anonymous function for an animation routine
 @type Function
 @default function(){}
 **/
-		fn: function() {},
 		/**
 Lower order animations are run during each frame before higher order ones
 @property order
@@ -8524,7 +9182,7 @@ _This attribute is not retained by the Animation object_
 **/
 	};
 	my.mergeInto(my.Animation.prototype.defs, my.Base.prototype.defs);
-	my.Animation.prototype.keyAttributeList = my.mergeArraysUnique(my.Base.prototype.keyAttributeList, ['fn', 'order']);
+	my.Animation.prototype.keyAttributeList = my.mergeArraysUnique(my.Base.prototype.keyAttributeList, ['order']);
 	my.Animation.prototype.getters = {};
 	my.mergeInto(my.Animation.prototype.getters, my.Base.prototype.getters);
 	my.Animation.prototype.setters = {};
@@ -8537,6 +9195,7 @@ Run an animation
 @return Always true
 **/
 	my.Animation.prototype.run = function() {
+		// console.log(this.name, 'ANIMATION.RUN called');
 		my.pushUnique(my.work.animate, this.name);
 		return true;
 	};
@@ -8546,6 +9205,7 @@ Check to see if animation is running
 @return true if active; false otherwise
 **/
 	my.Animation.prototype.isRunning = function() {
+		// console.log(this.name, 'ANIMATION.ISRUNNING called');
 		return my.contains(my.work.animate, this.name);
 	};
 	/**
@@ -8554,6 +9214,7 @@ Stop an animation
 @return Always true
 **/
 	my.Animation.prototype.halt = function() {
+		// console.log(this.name, 'ANIMATION.HALT called');
 		my.removeItem(my.work.animate, this.name);
 		return true;
 	};
@@ -8563,6 +9224,7 @@ Remove this Animation from the scrawl library
 @return Always true
 **/
 	my.Animation.prototype.kill = function() {
+		// console.log(this.name, 'ANIMATION.KILL called');
 		delete my.animation[this.name];
 		my.removeItem(my.animationnames, this.name);
 		my.removeItem(my.work.animate, this.name);

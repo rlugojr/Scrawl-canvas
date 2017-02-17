@@ -108,7 +108,6 @@ A __factory__ function to generate new Phrase entitys
 @final
 **/
 		my.Phrase.prototype.type = 'Phrase';
-		// my.Phrase.prototype.classname = 'entitynames';
 		my.Phrase.prototype.defs = {
 			/**
 Text string to be displayed - for multiline text, insert __\n__ where the text line breaks
@@ -195,7 +194,6 @@ Users should never interfere with Text objects, as they are destroyed and recrea
 @default []
 @private
 **/
-			// texts: [],
 		};
 		my.mergeInto(my.Phrase.prototype.defs, my.Entity.prototype.defs);
 		my.Phrase.prototype.keyAttributeList = my.mergeArraysUnique(my.Entity.prototype.keyAttributeList, ['text', 'style', 'variant', 'weight', 'size', 'metrics', 'family', 'lineHeight', 'textAlongPath', 'fixedWidth']);
@@ -231,11 +229,13 @@ Users should never interfere with Text objects, as they are destroyed and recrea
 				this.getMetricsFlag = true;
 			},
 			font: function(item){
-				var ctx;
+				var ctx, s;
 				if(this.context){
 					ctx = my.ctx[this.context];
 					if(ctx){
-						ctx.set({font: item});
+						s = my.requestObject('font', item);
+						ctx.set(s);
+						my.releaseObject(s);
 						this.checkFont(item);
 						this.currentHandle.flag = false;
 						this.multilineFlag = true;
@@ -319,7 +319,7 @@ Helper function - creates Text objects for each line of text in a multiline Phra
 				textArray,
 				textnames = my.textnames,
 				texts = this.texts,
-				items = {},
+				items = my.requestObject(),
 				ri = my.removeItem,
 				T = my.Text,
 				i,
@@ -347,6 +347,7 @@ Helper function - creates Text objects for each line of text in a multiline Phra
 				}
 			}
 			this.text = text;
+			my.releaseObject(items);
 			return this;
 		};
 		/**
@@ -378,15 +379,13 @@ Helper function - creates font-related attributes from entity's Context object's
 				res = [],
 				exclude = [100, 200, 300, 400, 500, 600, 700, 800, 900, 'italic', 'oblique', 'small-caps', 'bold', 'bolder', 'lighter', 'xx-small', 'x-small', 'small', 'medium', 'large', 'x-large', 'xx-large'],
 				myFamily,
-				myFontArray,
+				myFontArray = my.requestArray(),
 				style,
 				variant,
 				weight,
 				size,
 				metrics,
 				family;
-				// d = my.Phrase.prototype.defs,
-				// get = my.xtGet;
 			myFont = this.get('font');
 			style = this.get('style');
 			variant = this.get('variant');
@@ -464,7 +463,7 @@ Helper function - creates font-related attributes from entity's Context object's
 				metrics = 'pt';
 			}
 			myFamily = '';
-			myFontArray = myFont.split(' ');
+			myFontArray = myFontArray.concat(myFont.split(' '));
 			for (i = 0, iz = myFontArray.length; i < iz; i++) {
 				if (!my.contains(exclude, myFontArray[i])) {
 					if (!myFontArray[i].match(/[^\/](\d)+(%|in|cm|mm|em|rem|ex|pt|pc|px|vw|vh|vmin|vmax)?/i)) {
@@ -472,6 +471,7 @@ Helper function - creates font-related attributes from entity's Context object's
 					}
 				}
 			}
+			my.releaseArray(myFontArray);
 			if (!myFamily) {
 				myFamily = this.family;
 			}
@@ -537,7 +537,7 @@ Augments Entity.stamp()
 			var test, ctx, engine,
 				tempCellname, tempCell, tempEngine, tempGCO,
 				multifilterFlag = false,
-				tempFilter, work;
+				tempFilter, work, s;
 			if (this.visibility) {
 				if(this.constructFontFlag){
 					this.constructFontFlag = false;
@@ -572,10 +572,9 @@ Augments Entity.stamp()
 							engine = work.cvx2;
 							cell = work.cvwrapper2;
 							cellname = work.cvwrapper2.name;
-							cell.set({
-								width: tempCell.actualWidth,
-								height: tempCell.actualHeight
-							});
+							s = my.requestObject('width', tempCell.actualWidth, 'height', tempCell.actualHeight)
+							cell.set(s);
+							my.releaseObject(s);
 							my.work.cvcontroller.mice = my.pad[my.cell[tempCellname].pad].mice;
 						}
 					}
@@ -942,14 +941,6 @@ PHRASENAME String of parent Phrase object
 @private
 **/
 			phrase: '',
-			/**
-CTXNAME String of parent Phrase object's Context object
-@property context
-@type String
-@default ''
-@private
-**/
-			// context: '',
 			/**
 fixedWidth value of parent Phrase object
 @property fixedWidth

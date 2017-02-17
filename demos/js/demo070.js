@@ -7,7 +7,7 @@ var mycode = function() {
 		testMessage = document.getElementById('testmessage');
 	//hide-end
 
-	//define variables
+	// define variables
 	var myPad = scrawl.pad.mycanvas,
 		myEntity,
 		here,
@@ -16,12 +16,12 @@ var mycode = function() {
 		dropPhrase,
 		stopE;
 
-	//define groups
+	// define groups
 	dragGroup = scrawl.makeGroup({
 		name: 'drag',
 	});
 
-	//define entitys
+	// define entitys
 	scrawl.makePhrase({
 		name: 'lefty',
 		group: 'drag',
@@ -51,7 +51,7 @@ var mycode = function() {
 		fillStyle: 'green',
 	});
 
-	//event listeners
+	// event listeners
 	stopE = function(e) {
 		if (e) {
 			e.stopPropagation();
@@ -60,7 +60,6 @@ var mycode = function() {
 	};
 	getPhrase = function(e) {
 		stopE(e);
-		here = myPad.getMouse();
 		myEntity = dragGroup.getEntityAt(here);
 		if (myEntity) {
 			myEntity.pickupEntity(here);
@@ -76,7 +75,7 @@ var mycode = function() {
 	scrawl.addListener('down', getPhrase, scrawl.canvas.mycanvas);
 	scrawl.addListener(['up', 'leave'], dropPhrase, scrawl.canvas.mycanvas);
 
-	//animation object
+	// animation object
 	scrawl.makeAnimation({
 		fn: function() {
 			here = myPad.getMouse();

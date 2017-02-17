@@ -1,0 +1,703 @@
+/***********************************************************************************
+* SCRAWL.JS Library 
+*
+*	version 7.0.0 - ??? 2017
+*	Developed by Rik Roots - rik.roots@gmail.com, rik@rikweb.org.uk
+*
+*   Scrawl demo website: http://scrawl.rikweb.org.uk
+*
+***********************************************************************************/
+
+------------------------------------------------------------------------------------
+1. SCRAWL EXTENSIONS DEPENDENCIES
+------------------------------------------------------------------------------------
+
+	*While the 'factories' extension will not work unless used alongside 'path' or 'shape'
+		- they can all be loaded independently of each other with no dependencies
+
+	** Loading 'images' will automatically trigger a request to load 'imageload'
+
+	** Loading 'physics' or 'stacks' will automatically trigger a request to load 'quaternion'
+
+	scrawlCore.js
+		scrawlAnimation.js ('animation')
+		scrawlBlock ('block')
+		scrawlCollisions ('collisions')
+		scrawlColor.js ('color')
+		scrawlFrame.js ('frame')
+		**scrawlImageLoad.js ('imageload')
+			scrawlImages.js ('images')
+		scrawlMultifilters.js ('multifilter')
+		*scrawlPath.js ('path')
+		*scrawlPathFactories ('factories')
+		scrawlPhrase.js ('phrase')
+		***scrawlQuaternion.js ('quaternion')
+			scrawlPhysics.js ('physics')
+			scrawlStacks.js ('stacks')
+		scrawlSaveLoad.js ('saveload')
+		*scrawlShape.js ('shape')
+		scrawlWheel.js ('wheel')
+
+
+------------------------------------------------------------------------------------
+2. SCRAWL OBJECT INHERITANCE TREE
+------------------------------------------------------------------------------------
+
+*has makeOBJECT factory method
+
+Object (javascript)
+	Base ('core')
+		*Action ('animation')
+		*Animation' (''core')
+		*Color ('color')
+		Context ('core')
+		Design ('core')
+			*Gradient ('core')
+			*RadialGradient ('core')
+		Device ('core')
+		*ElementGroup ('stacks')
+		*Force ('physics')
+		*Frame ('frame')
+		FramePoint ('frame')
+		*Group ('core')
+		Image ('imageload')
+		Link ('path')
+		*MultiFilter ('multifilters')
+		PageElement ('core')
+			*Element ('stacks')
+			*Pad ('core')
+			*Stack ('stacks')
+		Point ('path')
+		Position ('core')
+			*Cell ('core')
+			Entity ('core')
+				*Block ('block')
+				*Path ('path')
+				*Phrase ('phrase')
+				*Picture ('images')
+				*Shape ('shape')
+				*Wheel ('wheel')
+		*Particle ('physics')
+		*Pattern ('images')
+		*Spring ('physics')
+		*SpriteAnimation ('imageload')
+		Text ('phrase')
+		*Ticker ('animation')
+		*Tween ('animation')
+		Video ('imageload')
+	*Filter ('multifilters')
+	*Quaternion ('quaternion')
+	*Vector ('core')
+
+
+------------------------------------------------------------------------------------
+3. Scrawl library sections
+------------------------------------------------------------------------------------
+
+- The window.scrawl object includes the following attribute objects
+
+window
+	.scrawl (core)
+		.
+
+------------------------------------------------------------------------------------
+4. Scrawl object functions
+------------------------------------------------------------------------------------
+
+- The window.scrawl object includes the following functions
+	* function is public
+	+ function is chainable (returns this)
+
+window
+	.scrawl (core)
+		.
+
+------------------------------------------------------------------------------------
+5. Object attributes
+------------------------------------------------------------------------------------
+
+- attributes are inherited in line with inheritence tree (2)
+	* attribute is setable using .set, and getable using .get 
+	+ attribute is an alias and is not retained by object
+	£ attribute either used for constructor and not retained, or may be manipulated during construction
+	~ strictly internal - never interfere!
+	# constant (amended by child objects)
+	[] keyAttributeList attributes
+	== cloneExcludedAttributes attributes
+
+Base
+	£name: (never false; generated if necessary) 					<core>
+	*comment: ''													<core>
+	*title: ''														<core>
+	*timestamp: ''													<core>
+	#defs (default attribute values)								<core>
+	#getters (bespoke get functions)								<core>
+	#setters (bespoke set functions)								<core>
+	#deltaSetters (bespoke setDelta functions)						<core>
+	#type															<core>
+	#lib 															<core>
+	#libname														<core>
+	#keyAttributeList												<core>
+	#cloneExcludedAttributes										<core>
+	[]
+	=name=
+
+Action
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+
+Animation
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+			*fn														<core>
+			*order: 0												<core>
+			£delay													<core>
+	[order]
+	=name=
+
+Color
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+
+Context
+	(All Context attributes will be set and get via Entity or Cell setter/getter functions)
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+			*fillStyle: '#000000'									<core>
+			*strokeStyle: '#000000'									<core>
+			*globalAlpha: 1											<core>
+			*globalCompositeOperation: 'source-over'				<core>
+			*lineWidth: 0											<core>
+			*lineCap: 'butt'										<core>
+			*lineJoin: 'miter'										<core>
+			*lineDash: []											<core>
+			*lineDashOffset: 0										<core>
+			*miterLimit: 10											<core>
+			*shadowOffsetX: 0										<core>
+			*shadowOffsetY: 0										<core>
+			*shadowBlur: 0											<core>
+			*shadowColor: 'rgba(0,0,0,0)'							<core>
+			*font: '10pt sans-serif'								<core>
+			*textAlign: 'start'										<core>
+			*textBaseline: 'alphabetic'								<core>
+			#contextKeys											<core>
+	[]
+	=name=
+
+Design
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+			*color: [{...},{...}]									<core>
+			*lockTo: 'cell'											<core>
+			*autoUpdate: false										<core>
+			~cell: ''												<core>
+			*startX: 0												<core>
+			*startY: 0												<core>
+			*endX: '100%'											<core>
+			*endY: 0												<core>
+	[color, lockTo, autoUpdate, cell, startX, startY, endX, endY]
+	=name=
+
+Gradient
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+	(from Design: *color, *lockTo, *autoUpdate, ~cell, *startX, *startY, *endX, *endY)
+	[color, lockTo, autoUpdate, cell, startX, startY, endX, endY]
+	=name=
+
+RadialGradient
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+	(from Design: *color, *lockTo, *autoUpdate, ~cell, *startX, *startY, *endX, *endY)
+			*startRadus: 0											<core>
+			*endRadus: 0											<core>
+	[color, lockTo, autoUpdate, cell, startX, startY, endX, endY]
+	=name=
+	
+Device
+	(get attributes directly eg scrawl.device.width; never set them!)
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+			width: null 											<core>
+			height: null 											<core>
+			offsetX: null 											<core>
+			offsetY: null 											<core>
+			expectTouch: false 										<core>
+			canvas: false 											<core>
+			canvasGcoSourceIn: false 								<core>
+			canvasGcoSourceOut: false 								<core>
+			canvasGcoDestinationAtop: false 						<core>
+			canvasGcoDestinationIn: false 							<core>
+			canvasGcoCopy: false 									<core>
+			canvasEvenOddWinding: false 							<core>
+			canvasDashedLine: false 								<core>
+	[]
+	=name=
+
+ElementGroup
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+
+Force
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+
+Frame
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+
+FramePoint
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+
+Group
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+			~entitys: []											<core>
+			*cell: ''												<core>
+			*order: 0												<core>
+			~resort: false											<core>
+			*visibility: true										<core>
+			*entitySort: true										<core>
+			*regionRadius: 0										<core>
+			*multiFilter 											<core>
+	[cell, order, resort, visibility, entitySort, regionRadius]
+	=name=
+
+Image
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+
+Link
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+
+MultiFilter
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+
+PageElement
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+			*width: 300 											<core>
+			*height: 150 											<core>
+			~localWidth 											<core>
+			~localHeight 											<core>
+			~displayOffsetX: 0 										<core>
+			~displayOffsetY: 0 										<core>
+			*scale: 1 												<core>
+			~mice (object containing key:vector pairs) 				<core>
+			*interactive: true 										<core>
+			*propogateTouch: false 									<core>
+			*position: 'static' 									<core>
+			~dirty (object containing recalculate flags) 			<core>
+	[width, height, displayOffsetX, displayOffsetY, scale, interactive, propogateTouch, position]
+	=name, mice=
+
+Element
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+	(from PageElement: *width, *height, ~localWidth, ~localHeight, ~displayOffsetX, ~displayOffsetY, *scale, ~mice, *interactive, *propogateTouch, *position, ~dirty)
+	[width, height, displayOffsetX, displayOffsetY, scale, interactive, propogateTouch, position]
+	=name, mice=
+
+Pad
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+	(from PageElement: *width, *height, ~localWidth, ~localHeight, ~displayOffsetX, ~displayOffsetY, *scale, ~mice, *interactive, *propogateTouch, *position, ~dirty)
+			£canvasElement											<core>
+			~cells: []												<core>
+			*display: ''											<core>
+			*base: ''												<core>
+			*current: ''											<core>
+			~cellsCompileOrder										<core>
+			~cellsShowOrder											<core>
+			~resortCompile											<core>
+			~resortShow												<core>
+	[width, height, displayOffsetX, displayOffsetY, scale, interactive, propogateTouch, position]
+	=name, mice=
+
+Stack
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+	(from PageElement: *width, *height, ~localWidth, ~localHeight, ~displayOffsetX, ~displayOffsetY, *scale, ~mice, *interactive, *propogateTouch, *position, ~dirty)
+	[width, height, displayOffsetX, displayOffsetY, scale, interactive, propogateTouch, position]
+	=name, mice=
+
+Point
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+
+Position
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+			+*startX (start.x)										<core>
+			+*startY (start.y)										<core>
+			*start: {x: 0,y: 0}										<core>
+			+*handleX (handle.x)									<core>
+			+*handleY (handle.y)									<core>
+			*handle: {x: 0, y: 0}									<core>
+			*pivot: null											<core>
+			*scale: 1												<core>
+			*flipReverse: false										<core>
+			*flipUpend: false										<core>
+			*lockX: false											<core>
+			*lockY: false											<core>
+			*roll: 0												<core>
+			*mouseIndex: 'mouse'									<core>
+			*width: 0												<core>
+			*height: 0												<core>
+			~currentStart											<core>
+			~currentHandle											<core>
+			~currentPivot											<core>
+			~currentPivotIndex										<core>
+	[pivot, scale, flipReverse, flipUpend, lockX, lockY, roll, mouseIndex, width, height]
+	=name, start, handle=
+
+Cell
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+	(from Position: *start, *handle, *pivot, *scale, *flipReverse, *flipUpend, *lockX, *lockY, *roll, *mouseIndex, *width, *height, ~currentStart, ~currentHandle, ~currentPivot, ~currentPivotIndex)
+			£canvas 												<core>
+			*pad: ''												<core>
+			+*copyX (copy.x)										<core>
+			+*copyY (copy.y)										<core>
+			*copy: {x: 0, y: 0}										<core>
+			*copyWidth: 300											<core>
+			*copyHeight: 150										<core>
+			~copyData												<core>
+			+*pasteX (start.x)										<core>
+			+*pasteY (start.y)										<core>
+			+*paste: start											<core>
+			*pasteWidth: 300										<core>
+			*pasteHeight: 150										<core>
+			~pasteData												<core>
+			~actualWidth: 300										<core>
+			~actualHeight: 150										<core>
+			*fieldLabel: ''											<core>
+			*globalAlpha: 1											<core>
+			*globalCompositeOperation: 'source-over'				<core>
+			*backgroundColor: 'rgba(0,0,0,0)'						<core>
+			~context: ''											<core>
+			~groups													<core>
+			*rendered: true											<core>
+			*cleared: true											<core>
+			*compiled: true											<core>
+			*shown: true											<core>
+			*compileOrder: 0										<core>
+			*showOrder: 0											<core>
+			~setDimensionsFlag										<core>
+			~dirtyHandlesFlag 										<core>
+			~dirtyStartsFlag										<core>
+			~context												<core>
+			~sortGroupsFlag											<core>
+			#setEngineActions										<core>
+	[pivot, scale, flipReverse, flipUpend, lockX, lockY, roll, mouseIndex, width, height, fieldLabel, globalAlpha, globalCompositeOperation, rendered, cleared, compiled, shown, compileOrder, showOrder, backgroundColor]
+	=name, start, handle, copyData, pasteData, context, copy=
+
+Entity
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+	(from Position: *start, *handle, *pivot, *scale, *flipReverse, *flipUpend, *lockX, *lockY, *roll, *mouseIndex, *width, *height, ~currentStart, ~currentHandle, ~currentPivot, ~currentPivotIndex)
+			*order: 0												<core>
+			*visibility: true										<core>
+			*method: 'fill'											<core>
+			*scaleOutline: true										<core>
+			*fastStamp: false										<core>
+			*group: ''												<core>
+			*multiFilter 											<core>
+			~oldX 													<core>
+			~oldY 													<core>
+			~oldPivot 												<core>
+	[pivot, scale, flipReverse, flipUpend, lockX, lockY, roll, mouseIndex, width, height, order, visibility, method, scaleOutline, fastStamp, group]
+	=name, start, handle, context=
+
+Block
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+	(from Position: *start, *handle, *pivot, *scale, *flipReverse, *flipUpend, *lockX, *lockY, *roll, *mouseIndex, *width, *height, ~currentStart, ~currentHandle, ~currentPivot, ~currentPivotIndex)
+	(from Entity: *order, *visibility, *method, *scaleOutline, *fastStamp, *group, *multiFilter, ~oldX, ~oldY, ~oldPivot)
+			~localWidth 											<block>
+			~localHeight 											<block>
+			~setLocalDimensionsFlag									<block>
+	[pivot, scale, flipReverse, flipUpend, lockX, lockY, roll, mouseIndex, width, height, order, visibility, method, scaleOutline, fastStamp, group]
+	=name, start, handle, context=
+
+Path
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+	(from Position: *start, *handle, *pivot, *scale, *flipReverse, *flipUpend, *lockX, *lockY, *roll, *mouseIndex, *width, *height, ~currentStart, ~currentHandle, ~currentPivot, ~currentPivotIndex)
+	(from Entity: *order, *visibility, *method, *scaleOutline, *fastStamp, *group, *multiFilter, ~oldX, ~oldY, ~oldPivot)
+	[pivot, scale, flipReverse, flipUpend, lockX, lockY, roll, mouseIndex, width, height, order, visibility, method, scaleOutline, fastStamp, group]
+	=name, start, handle, context=
+
+Phrase
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+	(from Position: *start, *handle, *pivot, *scale, *flipReverse, *flipUpend, *lockX, *lockY, *roll, *mouseIndex, *width, *height, ~currentStart, ~currentHandle, ~currentPivot, ~currentPivotIndex)
+	(from Entity: *order, *visibility, *method, *scaleOutline, *fastStamp, *group, *multiFilter, ~oldX, ~oldY, ~oldPivot)
+			*text: '' 											<phrase>
+			*style: 'normal' 										<phrase>
+			*variant: 'normal' 										<phrase>
+			*weight: 'normal' 										<phrase>
+			*size: 12 												<phrase>
+			*metrics: 'pt' 											<phrase>
+			*family: 'sans-serif' 									<phrase>
+			*lineHeight: 1.5 										<phrase>
+			*textAlongPath: 'phrase' 								<phrase>
+			*fixedWidth: false 										<phrase>
+			~texts 													<phrase>
+			~constructFontFlag										<phrase>
+			~multilineFlag											<phrase>
+			~getMetricsFlag											<phrase>
+	[pivot, scale, flipReverse, flipUpend, lockX, lockY, roll, mouseIndex, width, height, order, visibility, method, scaleOutline, fastStamp, group, text, style, variant, weight, size, metrics, family, lineHeight, textAlongPath, fixedWidth]
+	=name, start, handle, context=
+
+Picture
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+	(from Position: *start, *handle, *pivot, *scale, *flipReverse, *flipUpend, *lockX, *lockY, *roll, *mouseIndex, *width, *height, ~currentStart, ~currentHandle, ~currentPivot, ~currentPivotIndex)
+	(from Entity: *order, *visibility, *method, *scaleOutline, *fastStamp, *group, *multiFilter, ~oldX, ~oldY, ~oldPivot)
+	[pivot, scale, flipReverse, flipUpend, lockX, lockY, roll, mouseIndex, width, height, order, visibility, method, scaleOutline, fastStamp, group]
+	=name, start, handle, context=
+
+Shape
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+	(from Position: *start, *handle, *pivot, *scale, *flipReverse, *flipUpend, *lockX, *lockY, *roll, *mouseIndex, *width, *height, ~currentStart, ~currentHandle, ~currentPivot, ~currentPivotIndex)
+	(from Entity: *order, *visibility, *method, *scaleOutline, *fastStamp, *group, *multiFilter, ~oldX, ~oldY, ~oldPivot)
+	[pivot, scale, flipReverse, flipUpend, lockX, lockY, roll, mouseIndex, width, height, order, visibility, method, scaleOutline, fastStamp, group]
+	=name, start, handle, context=
+
+Wheel
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+	(from Position: *start, *handle, *pivot, *scale, *flipReverse, *flipUpend, *lockX, *lockY, *roll, *mouseIndex, *width, *height, ~currentStart, ~currentHandle, ~currentPivot, ~currentPivotIndex)
+	(from Entity: *order, *visibility, *method, *scaleOutline, *fastStamp, *group, *multiFilter, ~oldX, ~oldY, ~oldPivot)
+			*radius: 0 												<wheel>
+			*startAngle: 0 											<wheel>
+			*endAngle: 360 											<wheel>
+			*clockwise: false 										<wheel>
+			*closed: true 											<wheel>
+			*includeCenter: false 									<wheel>
+			*checkHitUsingRadius: true 								<wheel>
+			*checkHitRadius: 0 										<wheel>
+			~localCheckHitRadius 									<wheel>
+			~localRadius 											<wheel>
+			~localRadiusFlag 										<wheel>
+	[pivot, scale, flipReverse, flipUpend, lockX, lockY, roll, mouseIndex, width, height, order, visibility, method, scaleOutline, fastStamp, group, radius, startAngle, endAngle, clockwise, closed, includeCenter, checkHitUsingRadius, checkHitRadius]
+	=name, start, handle, context=
+
+Particle
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+
+Pattern
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+
+Spring
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+
+SpriteAnimation
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+
+Text
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+
+Ticker
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+
+Tween
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+
+Video
+	(from Base: £name, *comment, *title, *timestamp, #defs, #getters, #setters, #deltaSetters, #type, #lib, #libname, #keyAttributeList, #cloneExcludedAttributes)
+
+Filter
+
+Quaternion
+
+Vector
+
+
+------------------------------------------------------------------------------------
+6. Object functions
+------------------------------------------------------------------------------------
+
+- functions are inherited in line with inheritence tree (2)
+	* function is public
+	+ function is chainable (returns this)
+
+Base
+
+Action
+
+Animation
+
+Color
+
+Context
+
+Design
+
+Gradient
+
+RadialGradient
+
+Device
+
+ElementGroup
+
+Force
+
+Frame
+
+FramePoint
+
+Group
+
+Image
+
+Link
+
+MultiFilter
+
+PageElement
+
+Element
+
+Pad
+
+Stack
+
+Point
+
+Position
+
+Cell
+
+Entity
+
+Block
+
+Path
+
+Phrase
+
+Picture
+
+Shape
+
+Wheel
+
+Particle
+
+Pattern
+
+Spring
+
+SpriteAnimation
+
+Text
+
+Ticker
+
+Tween
+
+Video
+
+Filter
+
+Quaternion
+
+Vector
+
+
+------------------------------------------------------------------------------------
+7. CONSTRUCTORS and their helper functions
+------------------------------------------------------------------------------------
+
+- Constructors do NOT climb the inheritance tree; however their helper functions DO climb it.
+- All constructors receive a single key:value object as an argument
+	- All makeOBJECT factory methods receive the same argument and pass it to the appropriate constructor
+- In general, a constructor will call its .init function, then return 'this'
+- The .init function will in turn call other helper functions
+	- null functions are shown for Base, and disregarded for objects inheriting from Base
+
+Base
+	.init
+		(make the items argument safe for further interrogation)
+		.makeName (construct the name attribute)
+		.buildVectors (null function)
+		.addContext (null function)
+		.set.call (populate object attributes with values from items argument - uses .set)
+		.setKeyAttributes (populate key object attributes with default values if not already set - uses .get)
+		.preRegister (null function)
+		.register (register object in Scrawl library)
+		.postRegister (null function)
+		(return items)
+	(returns this)
+
+Action
+
+Animation
+	.init (from Base)
+		.set.call (from Base)
+		.setKeyAttributes (from Base)
+		(tests to add animation to animation loop)
+		(return items)
+	(returns this)
+
+Color
+
+Context
+
+Design
+
+Gradient
+
+RadialGradient
+
+Device
+
+ElementGroup
+
+Force
+
+Frame
+
+FramePoint
+
+Group
+
+Image
+
+Link
+
+MultiFilter
+
+PageElement
+
+Element
+
+Pad
+
+Stack
+
+Point
+
+Position
+
+Cell
+
+Entity
+
+Block
+
+Path
+
+Phrase
+
+Picture
+
+Shape
+
+Wheel
+
+Particle
+
+Pattern
+
+Spring
+
+SpriteAnimation
+
+Text
+
+Ticker
+
+Tween
+
+Video
+
+Filter
+
+Quaternion
+
+Vector
+
+
+------------------------------------------------------------------------------------
+8. Clone functionality
+------------------------------------------------------------------------------------
+
+

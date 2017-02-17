@@ -7,7 +7,7 @@ var mycode = function() {
 		testMessage = document.getElementById('testmessage');
 	//hide-end
 
-	//define block entitys
+	// define block entitys
 	scrawl.makeBlock({
 		startX: 10,
 		startY: 10,
@@ -21,7 +21,7 @@ var mycode = function() {
 		method: 'draw',
 	});
 
-	//display canvas
+	// display canvas
 	scrawl.render();
 
 	//hide-start
